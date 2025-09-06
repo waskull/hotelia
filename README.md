@@ -1,2 +1,2 @@
-# hotelia
+# hotelia (WIP)
 Proyecto academos django + drf
