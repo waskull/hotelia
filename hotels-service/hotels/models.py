@@ -23,7 +23,7 @@ class Room(models.Model):
     capacity = models.IntegerField()
     room_type = models.CharField(max_length=100)
     room_number = models.IntegerField()
-    price_per_day = models.DecimalField(max_digits=10, decimal_places=2)
+    price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     hotel = models.ForeignKey(
         'Hotel', on_delete=models.CASCADE, related_name='rooms')
     

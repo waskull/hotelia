@@ -17,7 +17,7 @@ class HotelsAdmin(admin.ModelAdmin):
     list_display = ('name', 'city', 'address', 'description', 'image')
 
 class RoomsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'capacity', 'room_type', 'room_number', 'price_per_day', 'hotel')
+    list_display = ('name', 'capacity', 'room_type', 'room_number', 'price_per_night', 'hotel')
 
 admin.site.register(Hotel,HotelsAdmin)
 admin.site.register(Room, RoomsAdmin)
