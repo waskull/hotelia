@@ -2,6 +2,7 @@
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Prefetch
 from django.contrib.auth import get_user_model
 
 # Permissions
@@ -13,6 +14,7 @@ from . import serializers
 # Models
 
 User = get_user_model()
+
 
 class UserViewSet(
     mixins.ListModelMixin,
@@ -61,7 +63,28 @@ class UserViewSet(
         data = {"message": "Te has desconectado del sistema"}
         return Response(data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def permissions(self, request, pk=None):
+        if pk is None:
+            return Response({"error": "User id is required"}, status=400)
+        try:
+            user = User.objects.prefetch_related(
+                Prefetch('groups'),
+                Prefetch('user_permissions')
+            ).get(id=pk)
+
+            # Puedes retornar los permisos y grupos como una lista de strings
+            user_permissions = list(user.get_all_permissions())
+            user_groups = list(user.groups.values_list('name', flat=True))
+
+            return Response({
+                'permissions': user_permissions,
+                'groups': user_groups,
+            })
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
     @action(detail=False, methods=["get"])
-    def my_profile(self, request):
+    def me(self, request):
         data = self.get_serializer(request.user).data
         return Response(data, status=status.HTTP_200_OK)

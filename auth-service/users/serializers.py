@@ -29,8 +29,8 @@ class UserModelSerializer(serializers.ModelSerializer):
     """
 
     # Only Read Fields
-    # groups = serializers.SerializerMethodField()
-
+    groups = serializers.SerializerMethodField()
+    
     # Only Form Fields
     role = serializers.CharField(
         max_length=None, min_length=None, allow_blank=False, write_only=True
@@ -46,25 +46,25 @@ class UserModelSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {
             "password": {"write_only": True},
-            "user_permissions": {"write_only": True},
-            "groups": {"write_only": True},
-            "is_superuser": {"write_only": True},
-            "is_staff": {"write_only": True},
+            "is_active": {"read_only": True},
+            "is_superuser": {"read_only": True},
+            "is_staff": {"read_only": True},
             "date_joined": {"write_only": True},
             "id": {"read_only": True},
-
+            "user_permissions": {"write_only": True},
         }
 
     def get_groups(self, obj):
         try:
-            serializer = GroupModelSerializer(obj.groups.all()[0], many=False)
+            serializer = GroupModelSerializer(obj.groups.all(), many=True)
             group = serializer.data
-            return group["name"]
+            grps =  [x["name"] for x in group]
+            return grps
         except Exception:
             return "none"
 
     def validate_role(self, role):
-        if role not in ["administrador", "gerente", "recepcionista", "cliente"]:
+        if role not in ["admin", "gerente", "recepcionista", "cliente"]:
             raise serializers.ValidationError("Valor erroneo")
         return role
 
@@ -75,7 +75,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Las contraseñas no coinciden")
         password_validation.validate_password(passwd)
         data["password"] = make_password(passwd)
-        self.context["group"] = data.pop("role", "administrador")
+        self.context["group"] = data.pop("role", "admin")
         return data
 
     def create(self, validated_data):
