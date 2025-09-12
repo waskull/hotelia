@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-dz3j!73!$bs^z83++(1$7%5e=r9a+)hth%uw$74)3n*jp#a%vr'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -117,14 +120,15 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     # YOUR SETTINGS
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    #'DEFAULT_AUTHENTICATION_CLASSES': (
+    #    'rest_framework_simplejwt.authentication.JWTAuthentication',
+    #),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
-    'AUTH_HEADER_TYPES': ('Bearer',)
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -140,28 +144,28 @@ SPECTACULAR_SETTINGS = {
         'persistAuthorization': True,
         'displayRequestDuration': True,
     },
-    'AUTHENTICATION_SCHEMES': {
-        'jwt': {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': 'JWT',
-        },
-    },
-    'SECURITY': [
-        {
-            'jwt': [],
-            'BearerAuth': [],
-        },
-    ],
-    'COMPONENTS': {
-        'securitySchemes': {
-            'BearerAuth': {
-                'type': 'http',
-                'scheme': 'bearer',
-                'bearerFormat': 'JWT',
-            }
-        }
-    }
+    # 'AUTHENTICATION_SCHEMES': {
+    #     'jwt': {
+    #         'type': 'http',
+    #         'scheme': 'bearer',
+    #         'bearerFormat': 'JWT',
+    #     },
+    # },
+    # 'SECURITY': [
+    #     {
+    #         'jwt': [],
+    #         'BearerAuth': [],
+    #     },
+    # ],
+    # 'COMPONENTS': {
+    #     'securitySchemes': {
+    #         'BearerAuth': {
+    #             'type': 'http',
+    #             'scheme': 'bearer',
+    #             'bearerFormat': 'JWT',
+    #         }
+    #     }
+    # }
 }
 
 

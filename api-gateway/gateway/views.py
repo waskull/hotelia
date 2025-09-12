@@ -41,19 +41,31 @@ class UserLoginView(APIView):
 
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
-
     def get(self, request, pk, *args, **kwargs):
         headers = {'Authorization': request.headers.get('Authorization')}
+        print("Headers: ",headers)
         try:
             response = requests.get(
-                f'{USERS_SERVICE_URL}users/{pk}/', headers=headers)
+                f'{USERS_SERVICE_URL}auth/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
+class UserProfileView(APIView):
+    #permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        headers = {'Authorization': request.headers.get('Authorization')}
+        print("Headers: ",headers)
+        try:
+            response = requests.get(
+                f'{USERS_SERVICE_URL}auth/me/', headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except requests.exceptions.RequestException as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
 class HotelListView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = HotelSerializer
 
     def get(self, request, *args, **kwargs):
@@ -76,7 +88,7 @@ class HotelListView(APIView):
 
 
 class HotelDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = HotelSerializer
 
     def get(self, request, pk, *args, **kwargs):
@@ -109,7 +121,7 @@ class HotelDetailView(APIView):
 
 # room
 class RoomListView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
     def get(self, request, *args, **kwargs):
@@ -132,7 +144,7 @@ class RoomListView(APIView):
 
 
 class RoomDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
     def get(self, request, pk, *args, **kwargs):
@@ -164,7 +176,7 @@ class RoomDetailView(APIView):
 
 
 class ReservationListView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         headers = {'Authorization': request.headers.get('Authorization')}
@@ -177,7 +189,7 @@ class ReservationListView(APIView):
 
 
 class CreateReservationView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         headers = {'Authorization': request.headers.get('Authorization')}
@@ -190,7 +202,7 @@ class CreateReservationView(APIView):
 
 
 class ReservationDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = ReservationSerializer
 
     def get(self, request, pk, *args, **kwargs):
@@ -222,7 +234,7 @@ class ReservationDetailView(APIView):
 
 
 class PaymentListView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = PaymentSerializer
 
     def get(self, request, *args, **kwargs):
@@ -245,7 +257,7 @@ class PaymentListView(APIView):
 
 
 class PaymentDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = PaymentSerializer
 
     def get(self, request, pk, *args, **kwargs):
