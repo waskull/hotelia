@@ -49,8 +49,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             room_id=room_from_request).exists()
 
         if room_is_available:
-            # hacer peticion a microservicio de hotels y traer informacion de la habitación del hotel
-            # room = requests.get.room(room_from_request)
+            # Terminar Luego hacer peticion a microservicio de hotels y traer informacion de la habitación del hotel
             headers = {'Authorization': request.headers.get(
                 'Authorization'), 'X-User-ID': request.headers.get('X-User-ID')}
             response = requests.get(
@@ -64,3 +63,5 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_201_CREATED, message="La Reserva ha sido creada")
 
         return Response(status=status.HTTP_400_BAD_REQUEST, message="Habitación no disponible en las fechas seleccionadas")
+    
+    #implementar actualizacion y cancelacion de reserva

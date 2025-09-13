@@ -11,7 +11,7 @@ HOTELS_SERVICE_URL = 'http://localhost:8002/api/'
 RESERVATIONS_SERVICE_URL = 'http://localhost:8003/api/'
 
 
-def setHeaders(request):
+def getHeaders(request):
     headers = {'Authorization': request.headers.get(
         'Authorization'), 'X-User-ID': request.headers.get('X-User-ID')}
     return headers
@@ -60,10 +60,10 @@ class UserRefreshTokenView(APIView):
 
 
 class UserDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         print("Headers: ", headers)
         try:
             response = requests.get(
@@ -76,7 +76,7 @@ class UserDetailView(APIView):
 class UserProfileView(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         print("Headers: ", headers)
         try:
             response = requests.get(
@@ -91,7 +91,7 @@ class HotelListView(APIView):
     serializer_class = HotelSerializer
 
     def get(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         print("Headers: ", headers)
         try:
             response = requests.get(
@@ -101,7 +101,7 @@ class HotelListView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def post(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.post(
                 f'{HOTELS_SERVICE_URL}hotels/', json=request.data, headers=headers)
@@ -115,7 +115,7 @@ class HotelDetailView(APIView):
     serializer_class = HotelSerializer
 
     def get(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{HOTELS_SERVICE_URL}hotels/{pk}/', headers=headers)
@@ -124,7 +124,7 @@ class HotelDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def put(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.put(
                 f'{HOTELS_SERVICE_URL}hotels/{pk}/', json=request.data, headers=headers)
@@ -133,7 +133,7 @@ class HotelDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def delete(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.delete(
                 f'{HOTELS_SERVICE_URL}hotels/{pk}/', headers=headers)
@@ -148,7 +148,7 @@ class RoomListView(APIView):
     serializer_class = RoomSerializer
 
     def get(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{HOTELS_SERVICE_URL}rooms/', headers=headers)
@@ -157,7 +157,7 @@ class RoomListView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def post(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.post(
                 f'{HOTELS_SERVICE_URL}rooms/', json=request.data, headers=headers)
@@ -171,7 +171,7 @@ class RoomDetailView(APIView):
     serializer_class = RoomSerializer
 
     def get(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{HOTELS_SERVICE_URL}rooms/{pk}/', headers=headers)
@@ -180,7 +180,7 @@ class RoomDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def put(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.put(
                 f'{HOTELS_SERVICE_URL}rooms/{pk}/', json=request.data, headers=headers)
@@ -189,7 +189,7 @@ class RoomDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def delete(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.delete(
                 f'{HOTELS_SERVICE_URL}rooms/{pk}/', headers=headers)
@@ -202,7 +202,7 @@ class ReservationListView(APIView):
     # permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/', headers=headers)
@@ -215,7 +215,7 @@ class CreateReservationView(APIView):
     # permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.post(
                 f'{RESERVATIONS_SERVICE_URL}reservations/', json=request.data, headers=headers)
@@ -229,7 +229,7 @@ class ReservationDetailView(APIView):
     serializer_class = ReservationSerializer
 
     def get(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', headers=headers)
@@ -238,7 +238,7 @@ class ReservationDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def put(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.put(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', json=request.data, headers=headers)
@@ -247,7 +247,7 @@ class ReservationDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def delete(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.delete(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', headers=headers)
@@ -261,7 +261,7 @@ class PaymentListView(APIView):
     serializer_class = PaymentSerializer
 
     def get(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{HOTELS_SERVICE_URL}payments/', headers=headers)
@@ -270,7 +270,7 @@ class PaymentListView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def post(self, request, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.post(
                 f'{HOTELS_SERVICE_URL}payments/', json=request.data, headers=headers)
@@ -284,7 +284,7 @@ class PaymentDetailView(APIView):
     serializer_class = PaymentSerializer
 
     def get(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.get(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', headers=headers)
@@ -293,7 +293,7 @@ class PaymentDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def put(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.put(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', json=request.data, headers=headers)
@@ -302,7 +302,7 @@ class PaymentDetailView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def delete(self, request, pk, *args, **kwargs):
-        headers = setHeaders(request)
+        headers = getHeaders(request)
         try:
             response = requests.delete(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', headers=headers)

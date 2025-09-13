@@ -14,6 +14,7 @@ class UserRegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     dni = serializers.CharField()
+    role = serializers.CharField()
     phone = serializers.CharField()
 
 class HotelSerializer(serializers.Serializer):
