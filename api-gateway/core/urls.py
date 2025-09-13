@@ -20,7 +20,7 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from gateway.views import (
-    UserLoginView, UserRegisterView, UserDetailView,UserProfileView,
+    UserLoginView, UserRegisterView, UserDetailView,UserProfileView, UserRefreshTokenView,
     HotelListView, HotelDetailView,
     ReservationListView, ReservationDetailView,
     CreateReservationView, RoomListView, RoomDetailView
@@ -30,6 +30,7 @@ urlpatterns = [
     path('auth/register/', UserRegisterView.as_view(), name='user-register'),
     path('auth/login/', UserLoginView.as_view(), name='user-login'),
     path('auth/me/', UserProfileView.as_view(), name='user-profile'),
+    path('auth/refresh/', UserRefreshTokenView.as_view(), name='user-refresh-token'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 
     # Rutas para el servicio de hoteles

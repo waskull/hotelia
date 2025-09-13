@@ -4,6 +4,9 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
+class UserRefreshSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
 class UserRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
