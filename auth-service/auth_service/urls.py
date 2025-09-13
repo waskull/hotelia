@@ -32,4 +32,5 @@ urlpatterns = [path("", include(router.urls))]
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

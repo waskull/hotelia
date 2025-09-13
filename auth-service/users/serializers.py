@@ -50,7 +50,6 @@ class UserModelSerializer(serializers.ModelSerializer):
             "is_superuser": {"read_only": True},
             "is_staff": {"read_only": True},
             "date_joined": {"write_only": True},
-            "id": {"read_only": True},
             "user_permissions": {"write_only": True},
         }
 
