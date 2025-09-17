@@ -87,7 +87,7 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-         'reservations.authentication.GatewayAuthentication',
+         'reservations.authentication.UserAuthentication',
     ),
 }
 
