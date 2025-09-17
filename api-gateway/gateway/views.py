@@ -13,7 +13,7 @@ RESERVATIONS_SERVICE_URL = 'http://localhost:8003/api/'
 
 def getHeaders(request):
     headers = {'Authorization': request.headers.get(
-        'Authorization'), 'X-User-ID': request.headers.get('X-User-ID')}
+        'Authorization')}
     return headers
 
 
@@ -204,6 +204,7 @@ class ReservationListView(APIView):
     def get(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
+            print("haciendo peticion")
             response = requests.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/', headers=headers)
             return Response(response.json(), status=response.status_code)
@@ -264,7 +265,7 @@ class PaymentListView(APIView):
         headers = getHeaders(request)
         try:
             response = requests.get(
-                f'{HOTELS_SERVICE_URL}payments/', headers=headers)
+                f'{RESERVATIONS_SERVICE_URL}payments/', headers=headers)
             return Response(response.json(), status=response.status_code)
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -273,7 +274,7 @@ class PaymentListView(APIView):
         headers = getHeaders(request)
         try:
             response = requests.post(
-                f'{HOTELS_SERVICE_URL}payments/', json=request.data, headers=headers)
+                f'{RESERVATIONS_SERVICE_URL}payments/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

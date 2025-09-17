@@ -6,25 +6,26 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 # La URL de tu auth-service
-AUTH_SERVICE_URL = 'http://localhost:8001/api/'
+GATEWAY_SERVICE_URL = 'http://localhost:8000/auth/me/'
 
 
-class GatewayAuthentication(BaseAuthentication):
+class UserAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        user_id = int(request.headers.get('X-User-ID'))
-        if not user_id:
-            return None  # No hay ID de usuario en el encabezado
 
         try:
             # 1. Realiza una llamada al auth-service para obtener la info del usuario
             headers = {'Authorization': request.headers.get('Authorization')}
             response = requests.get(
-                f'{AUTH_SERVICE_URL}auth/me/', headers=headers)
+                GATEWAY_SERVICE_URL, headers=headers)
             response.raise_for_status()  # Lanza un error para códigos de estado 4xx/5xx
 
             user_data = response.json()
+            user_id = user_data.get('id')
+            if not user_id:
+                return None  # No hay ID de usuario en el encabezado
 
             # 2. Crea un objeto de usuario en memoria con la info obtenida
+
             class ProxyUser(AbstractBaseUser):
                 id = None
                 username = user_data.get('email')
