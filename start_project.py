@@ -2,7 +2,6 @@ import subprocess
 import os
 import time
 import platform
-import sys
 
 # Define la ruta base de tu proyecto
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -92,4 +91,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nSeñal de interrupción recibida. Deteniendo los servicios...")
         stop_services()
+
         print("Saliendo del script.")
