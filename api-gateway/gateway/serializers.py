@@ -34,11 +34,11 @@ class RoomSerializer(serializers.Serializer):
 
 class ReservationSerializer(serializers.Serializer):
     room_id = serializers.IntegerField()
-    user_id = serializers.IntegerField()
+    user_id = serializers.IntegerField(required=False)
     start_date = serializers.DateField()
     end_date = serializers.DateField()
     status = serializers.CharField()
-    total_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    #total_price = serializers.DecimalField(max_digits=10, decimal_places=2)
 
 class PaymentSerializer(serializers.Serializer):
     reservation = serializers.IntegerField()

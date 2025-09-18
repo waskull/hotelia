@@ -13,12 +13,18 @@ from .models import Reservation, Payment
 
 
 class ReservationSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(required=False)
+
     class Meta:
         model = Reservation
-        fields = "__all__"
+        fields = '__all__'
+        extra_kwargs = {
+            "total_price": {"read_only": True},
+        }
 
     def create(self, validated_data):
         return Reservation.objects.create(**validated_data)
+
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:

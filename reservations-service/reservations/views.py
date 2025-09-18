@@ -45,11 +45,23 @@ class ReservationViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        print(serializer.validated_data)
+        user_id = request.data.get("user_id")
+        is_admin = "admin" in request.user.groups
+        is_staff = "recepcionista" in request.user.groups
+
+        if user_id and not (is_admin or is_staff):
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": "No tienes permiso para crear una reserva a otro usuario."})
+
+        if not user_id:
+            serializer.validated_data["user_id"] = request.user.id
+
+        # return Response(status=status.HTTP_201_CREATED, data={"message": "Reserva creada con exito"})
 
         start_date = serializer.validated_data["start_date"]
-        end_date = serializer.validated_data["start_date"]
+        end_date = serializer.validated_data["end_date"]
         room_id = serializer.validated_data["room_id"]
+
+        cost_night = 0.0
 
         try:
             response = requests.get(
@@ -58,6 +70,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             response.raise_for_status()
             if response.status_code == 404:
                 return Response({"error": "La habitación no existe."}, status=status.HTTP_404_NOT_FOUND)
+            cost_night = response.json()['price_per_night']
         except requests.exceptions.RequestException as e:
             if e.response.status_code == 404:
                 return Response({"error": "La habitación no existe."}, status=status.HTTP_404_NOT_FOUND)
@@ -69,6 +82,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "La fecha de salida debe ser posterior a la fecha actual"})
         elif start_date < datetime.now().date():
             return Response(status=status.HTTP_400_BAD_REQUEST, message="La fecha de entrada debe ser posterior a la fecha actual")
+        
+        days = int((end_date - start_date).days)
+        total:float = days * float(cost_night)
+        serializer.validated_data["total_price"] = total
+        print(serializer.validated_data)
 
         overlapping = Reservation.objects.filter(
             room_id=room_id
@@ -88,25 +106,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
         # Si está libre, crear la reserva
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        """ room_from_request = serializer.validated_data["room_id"]
-        room_is_available = not Reservation.objects.get(
-            room_id=room_from_request).exists()
-
-        if room_is_available:
-            # Terminar Luego hacer peticion a microservicio de hotels y traer informacion de la habitación del hotel
-            headers = {'Authorization': request.headers.get(
-                'Authorization')}
-            response = requests.get(
-                f'{HOTELS_SERVICE_URL}rooms/{room_from_request}/', headers=headers)
-            res = response.json()
-            total_days = (end_date - start_date).days
-            total_to_pay = total_days * room.price_per_night
-            Reservation.objects.create(user_id=request.user.id, room_id=room.id,
-                                       start_date=start_date, end_date=end_date, total_price=total_to_pay)
-
-            return Response(status=status.HTTP_201_CREATED, message="La Reserva ha sido creada")
-
-        return Response(status=status.HTTP_400_BAD_REQUEST, message="Habitación no disponible en las fechas seleccionadas") """
 
     def perform_create(self, serializer):
         serializer.save(
