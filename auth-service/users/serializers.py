@@ -30,7 +30,7 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     # Only Read Fields
     groups = serializers.SerializerMethodField()
-    
+
     # Only Form Fields
     role = serializers.CharField(
         max_length=None, min_length=None, allow_blank=False, write_only=True
@@ -57,7 +57,7 @@ class UserModelSerializer(serializers.ModelSerializer):
         try:
             serializer = GroupModelSerializer(obj.groups.all(), many=True)
             group = serializer.data
-            grps =  [x["name"] for x in group]
+            grps = [x["name"] for x in group]
             return grps
         except Exception:
             return "none"
@@ -82,6 +82,42 @@ class UserModelSerializer(serializers.ModelSerializer):
         group, created = Group.objects.get_or_create(
             name=self.context["group"])
         user.groups.add(group)
+        return user
+
+
+class UserCreateSerializer(UserModelSerializer):
+
+    password_confirmation = serializers.CharField(
+        min_length=4, max_length=64, write_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "password",
+            "password_confirmation",
+            "first_name",
+            "last_name",
+            "dni",
+            "phone",
+        )
+
+    def validate(self, data):
+        passwd = data["password"]
+        passwd_conf = data.pop("password_confirmation")
+        if passwd != passwd_conf:
+            raise serializers.ValidationError("Las contraseñas no coinciden")
+        password_validation.validate_password(passwd)
+        data["password"] = make_password(passwd)
+        #self.context["group"] = data.pop("role", "cliente")
+        return data
+
+    def create(self, validated_data):
+        user = User.objects.create(**validated_data)
+        cliente_group = Group.objects.get_or_create(name='cliente')
+        # group, created = Group.objects.get_or_create(name=self.context["group"])
+        user.groups.add(cliente_group[0])
         return user
 
 

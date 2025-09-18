@@ -12,12 +12,15 @@ from .models import Reservation, Payment
 # User = get_user_model()
 
 
-class ReservationSerializer(serializers.Serializer):
+class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = "__all__"
 
-class PaymentSerializer(serializers.Serializer):
+    def create(self, validated_data):
+        return Reservation.objects.create(**validated_data)
+
+class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = "__all__"

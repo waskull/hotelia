@@ -33,6 +33,11 @@ class UserViewSet(
     queryset = User.objects.all()
     serializer_class = serializers.UserModelSerializer
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return serializers.UserCreateSerializer
+        return self.serializer_class
+
     def get_permissions(self):
         """Assign permissions based on action."""
         permissions = [AllowAny]

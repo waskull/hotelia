@@ -18,10 +18,16 @@ class Hotel(models.Model):
         return self.name
 
 
+class RoomType(models.TextChoices):
+    SINGLE = 'Individual'
+    DOUBLE = 'Matrimonial'
+    SQUAD = 'Cuadruple'
+    SUITE = 'Suite'
+
 class Room(models.Model):
     name = models.CharField(max_length=100)
     capacity = models.IntegerField()
-    room_type = models.CharField(max_length=100)
+    room_type = models.CharField(max_length=100, choices=RoomType.choices)
     room_number = models.IntegerField()
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     hotel = models.ForeignKey(

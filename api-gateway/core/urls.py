@@ -22,8 +22,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from gateway.views import (
     UserLoginView, UserRegisterView, UserDetailView,UserProfileView, UserRefreshTokenView,
     HotelListView, HotelDetailView,
-    ReservationListView, ReservationDetailView,
-    CreateReservationView, RoomListView, RoomDetailView
+    ReservationListView, ReservationDetailView, RoomListView, RoomDetailView
 )
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -42,8 +41,7 @@ urlpatterns = [
     path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
 
     # Rutas para el servicio de reservaciones
-    path('reservations/', ReservationListView.as_view(), name='reservation-list'),
-    path('reservations/create/', CreateReservationView.as_view(), name='reservation-create'),
+    path('reservations/', ReservationListView.as_view(), name='reservation-list-create'),
     path('reservations/<int:pk>/', ReservationDetailView.as_view(), name='reservation-detail'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

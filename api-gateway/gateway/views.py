@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 from .serializers import UserLoginSerializer, UserRefreshSerializer, UserRegisterSerializer, HotelSerializer, RoomSerializer, ReservationSerializer, PaymentSerializer
 # Create your views here.
 USERS_SERVICE_URL = 'http://localhost:8001/api/'
@@ -88,11 +89,11 @@ class UserProfileView(APIView):
 
 class HotelListView(APIView):
     # permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FileUploadParser]
     serializer_class = HotelSerializer
 
     def get(self, request, *args, **kwargs):
         headers = getHeaders(request)
-        print("Headers: ", headers)
         try:
             response = requests.get(
                 f'{HOTELS_SERVICE_URL}hotels/', headers=headers)
@@ -103,8 +104,16 @@ class HotelListView(APIView):
     def post(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
+            data_without_image = {
+                'name': request.data['name'],
+                'city': request.data['city'],
+                'address': request.data['address'],
+                'description': request.data['description']
+            }
+            image_file = request.FILES['image'] 
+            files = {'image': (image_file.name, image_file.read(), image_file.content_type)}
             response = requests.post(
-                f'{HOTELS_SERVICE_URL}hotels/', json=request.data, headers=headers)
+                f'{HOTELS_SERVICE_URL}hotels/', files=files, data=data_without_image, headers=headers)
             return Response(response.json(), status=response.status_code)
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -113,7 +122,7 @@ class HotelListView(APIView):
 class HotelDetailView(APIView):
     # permission_classes = [IsAuthenticated]
     serializer_class = HotelSerializer
-
+    parser_classes = [MultiPartParser, FileUploadParser]
     def get(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
@@ -204,17 +213,12 @@ class ReservationListView(APIView):
     def get(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            print("haciendo peticion")
             response = requests.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/', headers=headers)
             return Response(response.json(), status=response.status_code)
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-
-class CreateReservationView(APIView):
-    # permission_classes = [IsAuthenticated]
-
+        
     def post(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:

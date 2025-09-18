@@ -2,8 +2,8 @@ from django.db.models import Q
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from datetime import datetime
-
-from .models import Reservation, Payment
+import requests
+from .models import Reservation, Payment, StateStatus
 from .serializers import ReservationSerializer, PaymentSerializer
 # Create your views here.
 
@@ -45,15 +45,28 @@ class ReservationViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
 
         start_date = serializer.validated_data["start_date"]
         end_date = serializer.validated_data["start_date"]
         room_id = serializer.validated_data["room_id"]
 
+        try:
+            response = requests.get(
+                f'{HOTELS_SERVICE_URL}rooms/{room_id}/', headers={'Authorization': request.headers.get(
+                    'Authorization')})
+            response.raise_for_status()
+            if response.status_code == 404:
+                return Response({"error": "La habitación no existe."}, status=status.HTTP_404_NOT_FOUND)
+        except requests.exceptions.RequestException as e:
+            if e.response.status_code == 404:
+                return Response({"error": "La habitación no existe."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         if end_date < start_date:
-            return Response(status=status.HTTP_400_BAD_REQUEST, message="La fecha de salida debe ser posterior a la fecha de entrada")
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "La fecha de salida debe ser posterior a la fecha entrada"})
         elif end_date < datetime.now().date():
-            return Response(status=status.HTTP_400_BAD_REQUEST, message="La fecha de salida debe ser posterior a la fecha actual")
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "La fecha de salida debe ser posterior a la fecha actual"})
         elif start_date < datetime.now().date():
             return Response(status=status.HTTP_400_BAD_REQUEST, message="La fecha de entrada debe ser posterior a la fecha actual")
 
@@ -94,6 +107,15 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_201_CREATED, message="La Reserva ha sido creada")
 
         return Response(status=status.HTTP_400_BAD_REQUEST, message="Habitación no disponible en las fechas seleccionadas") """
+
+    def perform_create(self, serializer):
+        serializer.save(
+            user_id=self.request.user.id,
+            room_id=serializer.validated_data["room_id"],
+            total_price=serializer.validated_data["total_price"],
+            start_date=serializer.validated_data["start_date"],
+            end_date=serializer.validated_data["end_date"]
+        )
 
     def destroy(self, request, *args, **kwargs):
         reservation = self.get_object()
