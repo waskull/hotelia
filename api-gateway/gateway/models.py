@@ -18,4 +18,3 @@ class Service(models.Model):
     class Meta:
         verbose_name = 'Microservicio'
         verbose_name_plural = 'Microservicios'
-    

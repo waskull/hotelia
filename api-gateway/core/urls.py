@@ -16,33 +16,31 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-#from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from gateway.views import (
-    UserLoginView, UserRegisterView, UserDetailView,UserProfileView, UserRefreshTokenView,
-    HotelListView, HotelDetailView,
-    ReservationListView, ReservationDetailView, RoomListView, RoomDetailView
+    UserLoginView, UserRegisterView, UserDetailView, UserProfileView, UserRefreshTokenView,
+    HotelView, ReservationView, RoomView, PaymentView
 )
+
+router = DefaultRouter()
+router.register(r'auth/login', UserLoginView, basename="user-login")
+router.register(r'auth/register', UserRegisterView, basename='user-registration')
+router.register(r'auth/me', UserProfileView, basename="user-profile")
+router.register(r'auth/refresh', UserRefreshTokenView,
+                basename="user-refresh-token")
+router.register(r'users', UserDetailView, basename="users")
+router.register(r'hotels', HotelView, basename="hotels-list")
+router.register(r'rooms', RoomView, basename="room")
+router.register(r'reservations', ReservationView, basename="reservation")
+router.register(r'payments', PaymentView, basename="payment")
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/register/', UserRegisterView.as_view(), name='user-register'),
-    path('auth/login/', UserLoginView.as_view(), name='user-login'),
-    path('auth/me/', UserProfileView.as_view(), name='user-profile'),
-    path('auth/refresh/', UserRefreshTokenView.as_view(), name='user-refresh-token'),
-    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-
-    # Rutas para el servicio de hoteles
-    path('hotels/', HotelListView.as_view(), name='hotel-list'),
-    path('hotels/<int:pk>/', HotelDetailView.as_view(), name='hotel-detail'),
-
-    # Rutas para el servicio de habitaciones
-    path('rooms/', RoomListView.as_view(), name='room-list'),
-    path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
-
-    # Rutas para el servicio de reservaciones
-    path('reservations/', ReservationListView.as_view(), name='reservation-list-create'),
-    path('reservations/<int:pk>/', ReservationDetailView.as_view(), name='reservation-detail'),
+    path('', include(router.urls)),
+    path('api_authorization/', include('rest_framework.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'),
+         name='swagger-ui'),
 ]

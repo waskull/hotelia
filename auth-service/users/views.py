@@ -72,7 +72,7 @@ class UserViewSet(
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
     def permissions(self, request, pk=None):
         if pk is None:
-            return Response({"error": "User id is required"}, status=400)
+            return Response({"error": "La id del usuario es requerida"}, status=400)
         try:
             user = User.objects.prefetch_related(
                 Prefetch('groups'),

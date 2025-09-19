@@ -4,6 +4,17 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
+class UserSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    dni = serializers.CharField()
+    groups = serializers.ListField()
+    last_login = serializers.DateTimeField()
+    is_active = serializers.BooleanField()
+    phone = serializers.CharField()
+    id = serializers.IntegerField()
+
 class UserRefreshSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
