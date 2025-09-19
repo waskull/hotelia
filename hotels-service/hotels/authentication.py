@@ -29,6 +29,7 @@ class UserAuthentication(BaseAuthentication):
             class ProxyUser(AbstractBaseUser):
                 id = None
                 username = user_data.get('email')
+                email = user_data.get("email")
                 is_staff = user_data.get('is_staff', False)
                 is_superuser = user_data.get('is_superuser', False)
                 first_name = user_data.get('first_name')

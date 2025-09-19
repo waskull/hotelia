@@ -11,7 +11,7 @@ GATEWAY_SERVICE_URL = 'http://localhost:8000/auth/me/'
 
 class UserAuthentication(BaseAuthentication):
     def authenticate(self, request):
-
+        print(request.method)
         try:
             # 1. Realiza una llamada al auth-service para obtener la info del usuario
             headers = {'Authorization': request.headers.get('Authorization')}
@@ -22,9 +22,9 @@ class UserAuthentication(BaseAuthentication):
             user_data = response.json()
             user_id = user_data.get('id')
             if not user_id:
-                return None  # No hay ID de usuario en el encabezado
+                return None  # No hay usuario con esa ID
 
-            # 2. Crea un objeto de usuario en memoria con la info obtenida
+            # Crea un objeto de usuario en memoria con la info obtenida
 
             class ProxyUser(AbstractBaseUser):
                 id = None
@@ -60,7 +60,7 @@ class UserAuthentication(BaseAuthentication):
         except requests.exceptions.RequestException:
             # Fallo en la comunicación con el auth-service
             raise AuthenticationFailed(
-                "Fallo al comunicarse con el servicio de autenticación.")
+                "No tienes autorización para acceder a este recurso.")
         except (ValueError, TypeError, KeyError):
             # Formato de datos incorrecto
             raise AuthenticationFailed(

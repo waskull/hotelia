@@ -1,10 +1,11 @@
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from datetime import datetime
+from rest_framework.decorators import action
 import requests
-from .models import Reservation, Payment, StateStatus
-from .serializers import ReservationSerializer, PaymentSerializer
+from .models import Reservation, Payment
+from .serializers import ReservationCountSerializer, ReservationSerializer, PaymentSerializer, ReservationPaymentSerializer
+# from .authentication import UserAuthentication
 # Create your views here.
 
 HOTELS_SERVICE_URL = 'http://localhost:8002/api/'
@@ -13,13 +14,13 @@ HOTELS_SERVICE_URL = 'http://localhost:8002/api/'
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class ReservationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -42,6 +43,42 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @action(detail=False, methods=["get"])
+    def top(self, request):
+        try:
+            user_id = request.user.id
+            top_popular_rooms = Reservation.objects.filter(user_id=user_id).values('room_id').annotate(count=Count('room_id')).order_by('-count')[:5]
+            serializer = ReservationCountSerializer(top_popular_rooms, many=True)
+            return Response(serializer.data)
+        except Reservation.DoesNotExist:
+            return Response({"error": "No se encontro habitaciones para dicho usuario", })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=["get"])
+    def user(self, request):
+        try:
+            reservations = Reservation.objects.filter(user_id=request.user.id)
+            serializer = ReservationSerializer(reservations, many=True)
+            return Response(serializer.data)
+        except Reservation.DoesNotExist:
+            return Response({"error": "No se encontro reservaciones para dicho usuario", })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=["get"])
+    def payments(self, request, pk=None):
+        if pk is None:
+            return Response({"error": "La id del hotel es requerida"}, status=400)
+        try:
+            payments = Payment.objects.filter(reservation_id=pk)
+            serializer = ReservationPaymentSerializer(payments, many=True)
+            return Response(serializer.data)
+        except Payment.DoesNotExist:
+            return Response({"error": "No se encontro pago para dicho hotel", })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -54,8 +91,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         if not user_id:
             serializer.validated_data["user_id"] = request.user.id
-
-        # return Response(status=status.HTTP_201_CREATED, data={"message": "Reserva creada con exito"})
 
         start_date = serializer.validated_data["start_date"]
         end_date = serializer.validated_data["end_date"]
@@ -76,15 +111,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 return Response({"error": "La habitación no existe."}, status=status.HTTP_404_NOT_FOUND)
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        if end_date < start_date:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "La fecha de salida debe ser posterior a la fecha entrada"})
-        elif end_date < datetime.now().date():
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "La fecha de salida debe ser posterior a la fecha actual"})
-        elif start_date < datetime.now().date():
-            return Response(status=status.HTTP_400_BAD_REQUEST, message="La fecha de entrada debe ser posterior a la fecha actual")
-        
         days = int((end_date - start_date).days)
-        total:float = days * float(cost_night)
+        total: float = days * float(cost_night)
         serializer.validated_data["total_price"] = total
         print(serializer.validated_data)
 
