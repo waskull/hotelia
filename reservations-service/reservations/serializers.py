@@ -38,6 +38,23 @@ class ReservationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return Reservation.objects.create(**validated_data)
 
+class UpdateReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['user_id', 'start_date', 'end_date', 'room_id', 'id']
+        extra_kwargs = {
+            "id": {"read_only": True}
+        }
+
+    def validate(self, data):
+        if data["end_date"] < data["start_date"]:
+            raise serializers.ValidationError("La fecha de salida debe ser posterior a la fecha entrada")
+        if data["end_date"] < datetime.now().date():
+            raise serializers.ValidationError("La fecha de salida debe ser posterior a la fecha actual")
+        if data["start_date"] < datetime.now().date():
+            raise serializers.ValidationError("La fecha de entrada debe ser posterior a la fecha actual")
+
+        return data
 
 class PaymentSerializer(serializers.ModelSerializer):
     payment_method = serializers.ChoiceField(choices=PaymentMethod.choices)

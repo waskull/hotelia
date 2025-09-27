@@ -1,13 +1,13 @@
 from django.db import models
 
 
-class StateStatus(models.TextChoices):
+class Status(models.TextChoices):
     PENDING = 'pending', 'Reserva Pendiente'
     CONFIRMED = 'confirmed', 'Reserva Confirmada'
     PREPARING = 'preparing', 'Habitación en preparación'
-    MAINTENANCE = 'maintenance', 'Habitación en mantenimiento'
     OCUPPIED = 'occupied', 'Ocupada'
     CANCELLED = 'cancelled', 'Reserva Cancelada'
+    COMPLETED = 'completed', 'Reserva Completada'
 
 
 class PaymentMethod(models.TextChoices):
@@ -47,8 +47,8 @@ class Reservation(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     status = models.CharField(
-        max_length=20, default=StateStatus.PENDING, choices=StateStatus.choices)
+        max_length=20, default=Status.PENDING, choices=Status.choices)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"Reserva de {self.user_id} para la habitación {self.room_id} del {self.start_date} al {self.end_date}"
+        return f"Reserva de {self.user_id} para la habitación {self.room_id} del {self.start_date} al {self.end_date}, ID: {self.pk}"
