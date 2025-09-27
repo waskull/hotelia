@@ -88,7 +88,7 @@ class UserViewSet(
                 'groups': user_groups,
             })
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
+            return Response({"error": "Usuario no encontrado"}, status=404)
 
     @action(detail=False, methods=["get"])
     def me(self, request):

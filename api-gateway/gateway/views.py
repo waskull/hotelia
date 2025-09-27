@@ -243,7 +243,16 @@ class ReservationView(ViewSet):
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    """ def update(self, request, pk, *args, **kwargs):
+    def partial_update(self, request, pk, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = requests.patch(
+                f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', json=request.data, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except requests.exceptions.RequestException as e:
+            return  Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+    def update(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
             response = requests.put(
@@ -251,7 +260,6 @@ class ReservationView(ViewSet):
             return Response(response.json(), status=response.status_code)
         except requests.exceptions.RequestException as e:
             return  Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-"""
 
     def destroy(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
