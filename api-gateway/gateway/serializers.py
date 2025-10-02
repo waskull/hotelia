@@ -9,11 +9,22 @@ class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     dni = serializers.CharField()
+    last_login = serializers.DateTimeField(required=False, allow_null=True)
     groups = serializers.ListField()
-    last_login = serializers.DateTimeField()
     is_active = serializers.BooleanField()
     phone = serializers.CharField()
     id = serializers.IntegerField()
+
+class UpdateUserSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    dni = serializers.CharField()
+    phone = serializers.CharField()
+
+class UpdateUserPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()
+    password_confirmation = serializers.CharField()
 
 class UserRefreshSerializer(serializers.Serializer):
     refresh = serializers.CharField()

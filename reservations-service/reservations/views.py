@@ -60,12 +60,46 @@ class ReservationViewSet(viewsets.ModelViewSet):
             queryset = queryset.exclude(room_id__in=reserved_rooms)
 
         return queryset
+    
+
+    @action(detail=False, methods=["get"])
+    def top_hotels(self, request):
+        try:
+            user_id = request.user.id
+            rowsn = self.request.query_params.get("rowsn")
+            if rowsn == None or rowsn < 0: rowsn = 10
+            if rowsn > 20:
+                rowsn = 20
+            
+            
+            top_popular_rooms = Reservation.objects.filter(user_id=user_id).values(
+                'room_id').annotate(count=Count('room_id')).order_by('-count')[:rowsn]
+            serializer = ReservationCountSerializer(
+                top_popular_rooms, many=True)
+            return Response(serializer.data)
+        except Reservation.DoesNotExist:
+            return Response({"error": "No se encontro habitaciones para dicho usuario", })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=["get"])
     def top(self, request):
         try:
             user_id = request.user.id
             top_popular_rooms = Reservation.objects.filter(user_id=user_id).values(
+                'room_id').annotate(count=Count('room_id')).order_by('-count')[:5]
+            serializer = ReservationCountSerializer(
+                top_popular_rooms, many=True)
+            return Response(serializer.data)
+        except Reservation.DoesNotExist:
+            return Response({"error": "No se encontro habitaciones para dicho usuario", })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=False, methods=["get"])
+    def top_global(self, request):
+        try:
+            top_popular_rooms = Reservation.objects.all().values(
                 'room_id').annotate(count=Count('room_id')).order_by('-count')[:5]
             serializer = ReservationCountSerializer(
                 top_popular_rooms, many=True)

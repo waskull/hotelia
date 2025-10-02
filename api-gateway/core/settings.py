@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
-
+RESERVATION_TOKEN = os.getenv("RESERVATION_TOKEN")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -98,6 +98,10 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
 ]
+
+USERS_SERVICE_URL = os.getenv("USERS_SERVICE_URL")
+HOTELS_SERVICE_URL = os.getenv("HOTELS_SERVICE_URL")
+RESERVATIONS_SERVICE_URL = os.getenv("RESERVATIONS_SERVICE_URL")
 
 
 # Internationalization

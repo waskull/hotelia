@@ -68,6 +68,13 @@ class UserViewSet(
         serializer.save()
         data = {"message": "Te has desconectado del sistema"}
         return Response(data, status=status.HTTP_200_OK)
+        
+    @action(detail=True, methods=["post"])
+    def password(self, request, pk=None):
+        serializer = serializers.UserPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"message": "Contraseña cambiada con éxito"}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
     def permissions(self, request, pk=None):

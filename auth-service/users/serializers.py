@@ -84,6 +84,18 @@ class UserModelSerializer(serializers.ModelSerializer):
         user.groups.add(group)
         return user
 
+class UserPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=4, max_length=64, write_only=True)
+    password_confirmation = serializers.CharField(min_length=4, max_length=64, write_only=True)
+
+    def validate(self, data):
+        passwd = data["password"]
+        passwd_conf = data.pop("password_confirmation")
+        if passwd != passwd_conf:
+            raise serializers.ValidationError("Las contraseñas no coinciden")
+        password_validation.validate_password(passwd)
+        data["password"] = make_password(passwd)
+        return data
 
 class UserCreateSerializer(UserModelSerializer):
 

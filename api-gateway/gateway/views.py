@@ -1,5 +1,6 @@
-import requests
-from django.shortcuts import render
+import httpx
+from asgiref.sync import async_to_sync
+from django.conf import settings
 # from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -7,18 +8,16 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FileUploadParser
-from .serializers import UserSerializer, UserLoginSerializer, UserRefreshSerializer, UserRegisterSerializer, HotelSerializer, RoomSerializer, ReservationSerializer, PaymentSerializer
+from .serializers import *
 # Create your views here.
-USERS_SERVICE_URL = 'http://localhost:8001/api/'
-HOTELS_SERVICE_URL = 'http://localhost:8002/api/'
-RESERVATIONS_SERVICE_URL = 'http://localhost:8003/api/'
+USERS_SERVICE_URL = settings.USERS_SERVICE_URL
+HOTELS_SERVICE_URL = settings.HOTELS_SERVICE_URL
+RESERVATIONS_SERVICE_URL = settings.RESERVATIONS_SERVICE_URL
 
 
 def getHeaders(request):
-    headers = {'Authorization': request.headers.get(
+    return {'Authorization': request.headers.get(
         'Authorization')}
-    return headers
-
 
 class UserRegisterView(ViewSet):
     serializer_class = UserRegisterSerializer
@@ -27,10 +26,10 @@ class UserRegisterView(ViewSet):
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            response = requests.post(
+            response = httpx.post(
                 f'{USERS_SERVICE_URL}auth/', json=request.data)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -41,10 +40,10 @@ class UserLoginView(ViewSet):
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            response = requests.post(
+            response = httpx.post(
                 f'{USERS_SERVICE_URL}auth/login/', json=serializer.data)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -55,24 +54,10 @@ class UserRefreshTokenView(ViewSet):
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            response = requests.post(
+            response = httpx.post(
                 f'{USERS_SERVICE_URL}token/refresh/', json=serializer.data)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
-            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-
-class UserDetailView(ViewSet):
-    # permission_classes = [IsAuthenticated]
-
-    def retrieve(self, request, pk, *args, **kwargs):
-        headers = getHeaders(request)
-        print("Headers: ", headers)
-        try:
-            response = requests.get(
-                f'{USERS_SERVICE_URL}auth/{pk}/', headers=headers)
-            return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -80,16 +65,77 @@ class UserProfileView(ViewSet):
     # permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, format=None):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{USERS_SERVICE_URL}auth/me/', headers=headers)
             serializer = self.serializer_class(data=response.json())
             serializer.is_valid(raise_exception=True)
             return Response(serializer.data, status=response.status_code)
-        except requests.exceptions.RequestException as e:
+
+        except httpx.RequestError as e:
             print("Error: ", response.status_code)
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+class UserView(ViewSet):
+    # permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def retrieve(self, request, pk, *args, **kwargs):
+        headers = getHeaders(request)
+        print("Headers: ", headers)
+        try:
+            response = httpx.get(
+                f'{USERS_SERVICE_URL}auth/{pk}/', headers=headers)
+            serializer = self.serializer_class(data=response.json())
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def list(self, request, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.get(
+                f'{USERS_SERVICE_URL}auth/', headers=headers)
+            serializer = self.serializer_class(data=response.json(), many=True)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=response.status_code)
+        except httpx.RequestError as e:
+            print("Error: ", response.status_code)
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)        
+
+    def update(self, request, pk, *args, **kwargs):
+        serializer = UpdateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        headers = getHeaders(request)
+        try:
+            response = httpx.put(
+                f'{USERS_SERVICE_URL}auth/{pk}/', json=serializer.validated_data, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+    def partial_update(self, request, pk, *args, **kwargs):        
+        serializer = UpdateUserPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        headers = getHeaders(request)
+        try:
+            response = httpx.post(
+                f'{USERS_SERVICE_URL}auth/{pk}/password', json=serializer.validated_data, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def destroy(self, request, pk, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.delete(
+                f'{USERS_SERVICE_URL}auth/{pk}/', headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -101,10 +147,10 @@ class HotelView(ViewSet):
     def list(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{HOTELS_SERVICE_URL}hotels/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def create(self, request, *args, **kwargs):
@@ -119,37 +165,49 @@ class HotelView(ViewSet):
             image_file = request.FILES['image']
             files = {
                 'image': (image_file.name, image_file.read(), image_file.content_type)}
-            response = requests.post(
+            response = httpx.post(
                 f'{HOTELS_SERVICE_URL}hotels/', files=files, data=data_without_image, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def retrieve(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{HOTELS_SERVICE_URL}hotels/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def update(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.put(
+            response = httpx.put(
                 f'{HOTELS_SERVICE_URL}hotels/{pk}/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def destroy(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.delete(
+            response = httpx.delete(
                 f'{HOTELS_SERVICE_URL}hotels/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+    @action(detail=False, methods=["get"])
+    def top(self, request):
+        headers = getHeaders(request)
+        url = f'{HOTELS_SERVICE_URL}hotels/top/'
+        try:
+            print(url)
+            response = httpx.get(url, params=request.query_params,headers=headers, timeout=12)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            print(e)
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -160,46 +218,46 @@ class RoomView(ViewSet):
     def list(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{HOTELS_SERVICE_URL}rooms/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def create(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.post(
+            response = httpx.post(
                 f'{HOTELS_SERVICE_URL}rooms/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def retrieve(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{HOTELS_SERVICE_URL}rooms/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def update(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.put(
+            response = httpx.put(
                 f'{HOTELS_SERVICE_URL}rooms/{pk}/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def destroy(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.delete(
+            response = httpx.delete(
                 f'{HOTELS_SERVICE_URL}rooms/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -208,66 +266,74 @@ class ReservationView(ViewSet):
 
     def list(self, request, *args, **kwargs):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
+        print(headers)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def create(self, request, *args, **kwargs):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
-            response = requests.post(
-                f'{RESERVATIONS_SERVICE_URL}reservations/', json=request.data, headers=headers)
+            response = httpx.post(
+                f'{RESERVATIONS_SERVICE_URL}reservations/', timeout=20, json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def retrieve(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     @action(detail=True, methods=["get"])
     def payments(self, request, pk=None):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/payments/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def partial_update(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
-            response = requests.patch(
+            response = httpx.patch(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
-            return  Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
     def update(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
-            response = requests.put(
+            response = httpx.put(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
-            return  Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def destroy(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
-            response = requests.delete(
+            response = httpx.delete(
                 f'{RESERVATIONS_SERVICE_URL}reservations/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -278,44 +344,44 @@ class PaymentView(ViewSet):
     def list(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{RESERVATIONS_SERVICE_URL}payments/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def create(self, request, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.post(
+            response = httpx.post(
                 f'{RESERVATIONS_SERVICE_URL}payments/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def retrieve(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.get(
+            response = httpx.get(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def update(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.put(
+            response = httpx.put(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', json=request.data, headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def destroy(self, request, pk, *args, **kwargs):
         headers = getHeaders(request)
         try:
-            response = requests.delete(
+            response = httpx.delete(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', headers=headers)
             return Response(response.json(), status=response.status_code)
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
