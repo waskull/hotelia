@@ -1,25 +1,30 @@
-# products-service/authentication.py
-
-import requests
+import httpx
+import json
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+from django.conf import settings
 
-# La URL de tu auth-service
-GATEWAY_SERVICE_URL = 'http://localhost:8000/auth/me/'
+_client = httpx.Client(base_url=settings.AUTH_SERVICE_URL, timeout=7.0)
 
 
 class UserAuthentication(BaseAuthentication):
     def authenticate(self, request):
-
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return None
         try:
             # 1. Realiza una llamada al auth-service para obtener la info del usuario
-            headers = {'Authorization': request.headers.get('Authorization')}
-            response = requests.get(
-                GATEWAY_SERVICE_URL, headers=headers)
+            headers = {'Authorization': auth_header}
+            response =  _client.get("auth/me/", headers=headers)
             response.raise_for_status()  # Lanza un error para códigos de estado 4xx/5xx
 
-            user_data = response.json()
+            try:
+                user_data = response.json()
+            except json.JSONDecodeError:
+                raise AuthenticationFailed(
+                    "El servicio de autenticación devolvió una respuesta JSON inválida."
+                )
             user_id = user_data.get('id')
             if not user_id:
                 return None  # No hay ID de usuario en el encabezado
@@ -57,11 +62,17 @@ class UserAuthentication(BaseAuthentication):
             user.id = user_id
             return (user, None)
 
-        except requests.exceptions.RequestException:
-            # Fallo en la comunicación con el auth-service
+        except httpx.RequestError as exc:
             raise AuthenticationFailed(
-                "Fallo al comunicarse con el servicio de autenticación.")
-        except (ValueError, TypeError, KeyError):
-            # Formato de datos incorrecto
+                "Fallo al comunicarse con el servicio de autenticación."
+            )
+        except httpx.HTTPStatusError as exc:
+            # Por ejemplo: 401 Unauthorized, 403 Forbidden, 500 Internal Server Error
+            # Podrías loggear response.text aquí para depuración
             raise AuthenticationFailed(
-                "El servicio de autenticación respondio con datos de usuario incorrectos.")
+                f"El servicio de autenticación rechazó la solicitud: {exc.response.status_code}"
+            )
+        except (ValueError, TypeError, KeyError) as exc:
+            raise AuthenticationFailed(
+                "El servicio de autenticación respondió con datos de usuario incorrectos."
+            )

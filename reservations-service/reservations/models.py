@@ -31,6 +31,7 @@ class Payment(models.Model):
     payment_method = models.CharField(
         max_length=20, default=PaymentMethod.CASH, choices=PaymentMethod.choices)
     payment_date = models.DateField(auto_now_add=True)
+    ref_code = models.CharField(max_length=50, default=None, null=True)
 
     def __str__(self):
         return f"Pago de {self.amount} para la reserva {self.reservation}"

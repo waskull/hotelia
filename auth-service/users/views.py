@@ -55,7 +55,6 @@ class UserViewSet(
             "user": self.get_serializer(serializer_data["user"]).data,
             "access_token": serializer_data["access_token"],
             "refresh_token": serializer_data["refresh_token"],
-            "id": serializer_data["user"].id,
             "message": "Sesión iniciada con exito",
         }
         return Response(data, status=status.HTTP_201_CREATED)

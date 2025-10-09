@@ -54,6 +54,10 @@ class RoomSerializer(serializers.Serializer):
     price_per_night = serializers.DecimalField(max_digits=10, decimal_places=2)
     hotel = serializers.IntegerField()
 
+class RoomResponseSerializer(RoomSerializer):
+    status = serializers.CharField()
+    id = serializers.IntegerField(required=False)
+
 class ReservationSerializer(serializers.Serializer):
     room_id = serializers.IntegerField()
     user_id = serializers.IntegerField(required=False)
@@ -66,4 +70,5 @@ class PaymentSerializer(serializers.Serializer):
     reservation = serializers.IntegerField()
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
+    ref_code = serializers.CharField()
     payment_date = serializers.DateField()

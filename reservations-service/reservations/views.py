@@ -1,38 +1,42 @@
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Count
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django.conf import settings
 import httpx
-import asyncio
-from asgiref.sync import async_to_sync
-from .models import Reservation, Payment, Status
+# from asgiref.sync import async_to_sync
+from .models import Reservation, Payment, Status, PaymentMethod
 from .serializers import ReservationCountSerializer, ReservationSerializer, UpdateReservationSerializer, PaymentSerializer, ReservationPaymentSerializer
 # from .authentication import UserAuthentication
 # Create your views here.
 
-HOTELS_SERVICE_URL = 'http://localhost:8002/api/'
-NOTIFICATIONS_SERVICE_URL = 'http://localhost:8004/api/'
-GATEWAY_SERVICE_URL = 'http://localhost:8000/'
-
-
-async def fetch_data(client, url, headers, timeout=10.0):
-    try:
-        print(url, headers, timeout)
-        response = await client.get(url=url, headers=headers, timeout=timeout)
-        response.raise_for_status()  # Lanza una excepción para errores HTTP
-        return response.json()
-    except httpx.HTTPStatusError as exc:
-        return {"error": f"Error en la petición: {exc.response.status_code}"}
-    except httpx.RequestError as exc:
-        return {"error": f"Error en petición: {exc}", "url": exc.request.url}
-    except Exception as exc:
-        return {"error": f"Error desconocido: {exc}"}
+HOTELS_SERVICE_URL = settings.HOTELS_SERVICE_URL
+NOTIFICATIONS_SERVICE_URL = settings.NOTIFICATIONS_SERVICE_URL
+GATEWAY_SERVICE_URL = settings.GATEWAY_SERVICE_URL
+AUTH_SERVICE_URL = settings.AUTH_SERVICE_URL
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    @action(detail=False, methods=["GET"])
+    def stats(self, request):
+        top_count_method = Payment.objects.values('payment_method').annotate(
+            count=Count('payment_method')).order_by('-count')[:5]
+        top_users = Reservation.objects.filter(status=Status.COMPLETED).values('user_id').annotate(count=Count('user_id')).order_by('-count')
+        return Response({"top_method": top_count_method, "top_users": top_users}, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+
+        if len(request.data.get("ref_code")) > 0 and request.data.get("payment_method") in [PaymentMethod.CASH, PaymentMethod.DEBIT_CARD, PaymentMethod.CREDIT_CARD]:
+            request.data.pop("ref_code")
+        print(request.data)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        Payment.objects.create(**serializer.validated_data)
+        return Response({"message": "Pago realizado con exito"}, status=status.HTTP_201_CREATED)
 
 
 class ReservationViewSet(viewsets.ModelViewSet):
@@ -60,27 +64,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
             queryset = queryset.exclude(room_id__in=reserved_rooms)
 
         return queryset
-    
-
-    @action(detail=False, methods=["get"])
-    def top_hotels(self, request):
-        try:
-            user_id = request.user.id
-            rowsn = self.request.query_params.get("rowsn")
-            if rowsn == None or rowsn < 0: rowsn = 10
-            if rowsn > 20:
-                rowsn = 20
-            
-            
-            top_popular_rooms = Reservation.objects.filter(user_id=user_id).values(
-                'room_id').annotate(count=Count('room_id')).order_by('-count')[:rowsn]
-            serializer = ReservationCountSerializer(
-                top_popular_rooms, many=True)
-            return Response(serializer.data)
-        except Reservation.DoesNotExist:
-            return Response({"error": "No se encontro habitaciones para dicho usuario", })
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=["get"])
     def top(self, request):
@@ -95,12 +78,25 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response({"error": "No se encontro habitaciones para dicho usuario", })
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
     @action(detail=False, methods=["get"])
-    def top_global(self, request):
+    def top_hotels(self, request):
         try:
-            top_popular_rooms = Reservation.objects.all().values(
-                'room_id').annotate(count=Count('room_id')).order_by('-count')[:5]
+            me = request.query_params.get("me")
+            rows = int(self.request.query_params.get("rows") or 5)
+            if rows < 0:
+                rows = 5
+            if rows > 10:
+                rows = 10
+            top_popular_rooms = []
+            if me == "true":
+                print("user: ", request.user.id)
+                user_id = request.user.id
+                top_popular_rooms = Reservation.objects.filter(user_id=user_id).values(
+                    'room_id').annotate(count=Count('room_id')).order_by('-count')[:rows]
+            else:
+                top_popular_rooms = Reservation.objects.all().values(
+                    'room_id').annotate(count=Count('room_id')).order_by('-count')[:rows]
             serializer = ReservationCountSerializer(
                 top_popular_rooms, many=True)
             return Response(serializer.data)
@@ -150,7 +146,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if user_id:
             try:
                 response = httpx.get(
-                    f'{GATEWAY_SERVICE_URL}users/{serializer.validated_data["user_id"]}/', headers={'Authorization': request.headers.get(
+                    f'{AUTH_SERVICE_URL}auth/{serializer.validated_data["user_id"]}/', headers={'Authorization': request.headers.get(
                         'Authorization')})
                 response.raise_for_status()
                 email = response.json()['email']
@@ -165,14 +161,17 @@ class ReservationViewSet(viewsets.ModelViewSet):
         start_date = serializer.validated_data["start_date"]
         end_date = serializer.validated_data["end_date"]
         room_id = serializer.validated_data["room_id"]
-
+        result = {}
         cost_night = 0.0
         try:
             response = httpx.get(
                 f'{HOTELS_SERVICE_URL}rooms/{room_id}/', headers={'Authorization': request.headers.get(
                     'Authorization')})
             response.raise_for_status()
-            cost_night = response.json()['price_per_night']
+            result = response.json()
+            if result["status"] != "available":
+                return Response({"error": "La habitación no esta disponible."}, status=status.HTTP_400_BAD_REQUEST)
+            cost_night = result['price_per_night']
         except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except httpx.HTTPStatusError as exc:
@@ -203,16 +202,17 @@ class ReservationViewSet(viewsets.ModelViewSet):
         # Si está libre, crear la reserva
         self.perform_create(serializer)
         try:
+            print(result)
             json = {
                 "subject": "Reserva realizada",
-                "body": f"Hola {request.user.first_name}, tu reserva para la habitación {room_id} del {start_date} al {end_date} ha sido realizada.",
+                "body": f"Hola {request.user.first_name} {request.user.last_name}, tu reserva para la habitación #{room_id} en el hotel {result['hotel']} del {start_date} al {end_date} ha sido realizada.",
                 "destinations": [email]
             }
             if (email):
-                response = httpx.get(
-                    f'{NOTIFICATIONS_SERVICE_URL}api/email/', json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_GATEWAY_TOKEN})
+                response = httpx.post(
+                    f'{NOTIFICATIONS_SERVICE_URL}email/', json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_TOKEN})
                 response.raise_for_status()
-                print(response.json)
+                print(response.json())
         except httpx.RequestError as e:
             print("No se pudo enviar el correo")
         return Response(serializer.data, status=status.HTTP_201_CREATED)

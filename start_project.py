@@ -81,7 +81,7 @@ def start_services():
         if use_uvicorn == 's':
             command = [
                 uvicorn_executable, service['app_module'], '--host', '0.0.0.0', '--port', str(
-                    service['port'])
+                    service['port']), '--reload'
             ]
         else:
             command = [

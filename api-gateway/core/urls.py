@@ -21,7 +21,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from gateway.views import (
     UserLoginView, UserRegisterView, UserProfileView, UserRefreshTokenView,UserView,
-    HotelView, ReservationView, RoomView, PaymentView
+    HotelView, ReservationView, RoomView, PaymentView, top
 )
 
 router = DefaultRouter()
@@ -38,6 +38,7 @@ router.register(r'payments', PaymentView, basename="payment")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('top', top, name='top'),
     path('', include(router.urls)),
     path('api_authorization/', include('rest_framework.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

@@ -19,16 +19,22 @@ class Hotel(models.Model):
 
 
 class RoomType(models.TextChoices):
-    SINGLE = 'Individual'
-    DOUBLE = 'Matrimonial'
-    SQUAD = 'Cuadruple'
+    SINGLE = 'single'
+    DOUBLE = 'double'
+    SQUAD = 'squad'
     SUITE = 'Suite'
+
+class RoomStatus(models.TextChoices):
+    MAINTENANCE = "maintenance"
+    DISABLED = "disabled"
+    AVAILABLE = "available"
 
 class Room(models.Model):
     name = models.CharField(max_length=100)
     capacity = models.IntegerField()
     room_type = models.CharField(max_length=100, choices=RoomType.choices)
     room_number = models.IntegerField()
+    status = models.CharField(max_length=50, default=RoomStatus.AVAILABLE, choices=RoomStatus.choices)
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     hotel = models.ForeignKey(
         'Hotel', on_delete=models.CASCADE, related_name='rooms')

@@ -25,6 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 RESERVATION_TOKEN = os.getenv("RESERVATION_TOKEN")
 RESERVATIONS_SERVICE_URL = os.getenv("RESERVATIONS_SERVICE_URL")
+AUTH_SERVICE_TOKEN = os.getenv("AUTH_SERVICE_TOKEN")
+AUTH_SERVICE_URL = os.getenv("USERS_SERVICE_URL")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

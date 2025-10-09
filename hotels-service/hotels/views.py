@@ -49,14 +49,10 @@ class HotelViewSet(viewsets.ModelViewSet):
     def top(self, request):
         headers = getHeaders(request)
         headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
-        me = request.query_params.get("me")
-        url = f'{RESERVATIONS_SERVICE_URL}reservations/top_global/'
-        if me == "true":
-            url = f'{RESERVATIONS_SERVICE_URL}reservations/top/'
+        url = f'{RESERVATIONS_SERVICE_URL}reservations/top_hotels/'
         try:
-            response = httpx.get(url, headers=headers)
+            response = httpx.get(url, timeout=15, headers=headers, params=request.query_params)
             data = response.json()
-            print(data)
             room_ids = []
 
             for item in data:
