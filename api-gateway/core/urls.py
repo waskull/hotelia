@@ -21,7 +21,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from gateway.views import (
     UserLoginView, UserRegisterView, UserProfileView, UserRefreshTokenView,UserView,
-    HotelView, ReservationView, RoomView, PaymentView, top
+    HotelView, ReservationView,ReviewView, RoomView, PaymentView, top
 )
 
 router = DefaultRouter()
@@ -30,9 +30,10 @@ router.register(r'auth/register', UserRegisterView, basename='user-registration'
 router.register(r'auth/me', UserProfileView, basename="user-profile")
 router.register(r'auth/refresh', UserRefreshTokenView,
                 basename="user-refresh-token")
-router.register(r'users', UserView, basename="user-list")
-router.register(r'hotels', HotelView, basename="hotels-list")
-router.register(r'rooms', RoomView, basename="room")
+router.register(r'users', UserView, basename="users")
+router.register(r'hotels', HotelView, basename="hotels")
+router.register(r'reviews', ReviewView, basename="reviews")
+router.register(r'rooms', RoomView, basename="rooms")
 router.register(r'reservations', ReservationView, basename="reservation")
 router.register(r'payments', PaymentView, basename="payment")
 

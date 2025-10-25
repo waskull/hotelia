@@ -14,8 +14,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 NOTIFICATIONS_GATEWAY_TOKEN = os.getenv("NOTIFICATION_TOKEN")
+HOTEL_SERVICE_TOKEN = os.getenv("HOTEL_SERVICE_TOKEN")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 

@@ -2,7 +2,7 @@ from django.contrib.auth import password_validation, authenticate
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
-
+from django.conf import settings
 # Django REST Framework
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
@@ -12,9 +12,12 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed, TokenError
 
+import httpx
 # Models
 
 User = get_user_model()
+
+NOTIFICATIONS_SERVICE_URL = settings.NOTIFICATIONS_SERVICE_URL
 
 
 class GroupModelSerializer(serializers.ModelSerializer):
@@ -24,26 +27,14 @@ class GroupModelSerializer(serializers.ModelSerializer):
 
 
 class UserModelSerializer(serializers.ModelSerializer):
-    """
-    User Model serializer
-    """
-
-    # Only Read Fields
     groups = serializers.SerializerMethodField()
-
-    # Only Form Fields
-    role = serializers.CharField(
-        max_length=None, min_length=None, allow_blank=False, write_only=True
-    )
     password_confirmation = serializers.CharField(
         min_length=4, max_length=64, write_only=True
     )
 
     class Meta:
-
         model = User
         fields = "__all__"
-
         extra_kwargs = {
             "password": {"write_only": True},
             "is_active": {"read_only": True},
@@ -62,11 +53,6 @@ class UserModelSerializer(serializers.ModelSerializer):
         except Exception:
             return "none"
 
-    def validate_role(self, role):
-        if role not in ["admin", "gerente", "recepcionista", "cliente"]:
-            raise serializers.ValidationError("Valor erroneo")
-        return role
-
     def validate(self, data):
         passwd = data["password"]
         passwd_conf = data.pop("password_confirmation")
@@ -84,9 +70,12 @@ class UserModelSerializer(serializers.ModelSerializer):
         user.groups.add(group)
         return user
 
+
 class UserPasswordSerializer(serializers.Serializer):
-    password = serializers.CharField(min_length=4, max_length=64, write_only=True)
-    password_confirmation = serializers.CharField(min_length=4, max_length=64, write_only=True)
+    password = serializers.CharField(
+        min_length=4, max_length=64, write_only=True)
+    password_confirmation = serializers.CharField(
+        min_length=4, max_length=64, write_only=True)
 
     def validate(self, data):
         passwd = data["password"]
@@ -96,6 +85,7 @@ class UserPasswordSerializer(serializers.Serializer):
         password_validation.validate_password(passwd)
         data["password"] = make_password(passwd)
         return data
+
 
 class UserCreateSerializer(UserModelSerializer):
 
@@ -114,6 +104,9 @@ class UserCreateSerializer(UserModelSerializer):
             "dni",
             "phone",
         )
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
 
     def validate(self, data):
         passwd = data["password"]
@@ -122,7 +115,8 @@ class UserCreateSerializer(UserModelSerializer):
             raise serializers.ValidationError("Las contraseñas no coinciden")
         password_validation.validate_password(passwd)
         data["password"] = make_password(passwd)
-        #self.context["group"] = data.pop("role", "cliente")
+        data["is_active"] = True
+        # self.context["group"] = data.pop("role", "cliente")
         return data
 
     def create(self, validated_data):
@@ -134,12 +128,6 @@ class UserCreateSerializer(UserModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """
-    User login serializer.
-
-    Handle the login request data.
-    """
-
     email = serializers.CharField(min_length=6, max_length=30)
     password = serializers.CharField(min_length=4, max_length=20)
 
@@ -152,7 +140,6 @@ class UserLoginSerializer(serializers.Serializer):
         return data
 
     def create(self, data):
-        """Generate new token."""
         user: User = self.context["user"]
         token = RefreshToken.for_user(user)
         refresh_token = str(token)
@@ -165,12 +152,6 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserLogoutSerializer(serializers.Serializer):
-    """
-    User login serializer.
-
-    Handle the logout request data.
-    """
-
     refresh_token = serializers.CharField()
 
     def validate(self, data):

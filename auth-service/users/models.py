@@ -18,7 +18,7 @@ class User(AbstractUser):
         error_messages={"unique": "Ya hay un usuario con este email"},
     )
     dni = models.CharField(max_length=10, unique=True)
-    phone = models.CharField(validators=[phone_regex], max_length=17, blank=False)
+    phone = models.CharField(validators=[phone_regex], max_length=17, blank=False, unique=True, error_messages={"unique": "Ya hay un usuario con este telefono"},)
     username = None
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["dni"]

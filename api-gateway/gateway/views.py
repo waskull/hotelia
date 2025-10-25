@@ -28,7 +28,7 @@ class UserRegisterView(ViewSet):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             response = httpx.post(
-                f'{USERS_SERVICE_URL}auth/', json=request.data)
+                f'{USERS_SERVICE_URL}auth/', json=request.data, timeout=12)
             return Response(response.json(), status=response.status_code)
         except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -70,7 +70,7 @@ class UserProfileView(ViewSet):
         headers = getHeaders(request)
         try:
             response = httpx.get(
-                f'{USERS_SERVICE_URL}auth/me/', headers=headers)
+                f'{USERS_SERVICE_URL}auth/me/', headers=headers, timeout=12)
             serializer = self.serializer_class(data=response.json())
             serializer.is_valid(raise_exception=True)
             return Response(serializer.data, status=response.status_code)
@@ -161,7 +161,8 @@ class HotelView(ViewSet):
                 'name': request.data['name'],
                 'city': request.data['city'],
                 'address': request.data['address'],
-                'description': request.data['description']
+                'description': request.data['description'],
+                'services': request.data['services']
             }
             image_file = request.FILES['image']
             files = {
@@ -225,6 +226,56 @@ async def top(request):
                 return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
+class ReviewView(ViewSet):
+    serializer_class = ReviewSerializer
+
+    def list(self, request, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.get(
+                f'{HOTELS_SERVICE_URL}reviews/', timeout=15, headers=headers, params=request.query_params)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def create(self, request, *args, **kwargs):
+        headers = getHeaders(request)
+        headers["X-Hotel-Gateway-Token"] = settings.HOTEL_SERVICE_TOKEN
+        try:
+            print(headers)
+            response = httpx.post(
+                f'{HOTELS_SERVICE_URL}reviews/', timeout=15, json=request.data, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+    def retrieve(self, request, pk, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.get(
+                f'{HOTELS_SERVICE_URL}reviews/{pk}/', timeout=15, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def update(self, request, pk, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.put(
+                f'{HOTELS_SERVICE_URL}reviews/{pk}/', timeout=15, json=request.data, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def destroy(self, request, pk, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.delete(
+                f'{HOTELS_SERVICE_URL}reviews/{pk}/', timeout=15, headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
 class RoomView(ViewSet):
     # permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
@@ -287,7 +338,7 @@ class ReservationView(ViewSet):
         headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         try:
             response = httpx.get(
-                f'{RESERVATIONS_SERVICE_URL}reservations/', timeout=15, headers=headers)
+                f'{RESERVATIONS_SERVICE_URL}reservations/', timeout=15, headers=headers, params=request.query_params)
             return Response(response.json(), status=response.status_code)
         except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

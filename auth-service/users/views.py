@@ -4,7 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Prefetch
 from django.contrib.auth import get_user_model
-
+from django.conf import settings
+import httpx
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
@@ -14,7 +15,7 @@ from . import serializers
 # Models
 
 User = get_user_model()
-
+NOTIFICATIONS_SERVICE_URL = settings.NOTIFICATIONS_SERVICE_URL
 
 class UserViewSet(
     mixins.ListModelMixin,
@@ -24,12 +25,6 @@ class UserViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    User view set.
-
-    Handle login and logout.
-    """
-
     queryset = User.objects.all()
     serializer_class = serializers.UserModelSerializer
 
@@ -39,15 +34,34 @@ class UserViewSet(
         return self.serializer_class
 
     def get_permissions(self):
-        """Assign permissions based on action."""
         permissions = [AllowAny]
         if self.action in ["logout"]:
             permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        try:
+            email = serializer.data.get("email")
+            first_name = serializer.data.get("first_name")
+            last_name = serializer.data.get("last_name")
+            json = {
+                "subject": "USUARIO CREADO",
+                "body": f"Hola, {first_name} {last_name} tu usuario ha sido creado exitosamente. Bienvenido a Hotelia.",
+                "destinations": [email]
+            }
+            response = httpx.post(
+                f'{NOTIFICATIONS_SERVICE_URL}email/',timeout=8, json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_TOKEN})
+            response.raise_for_status()
+            print(response.json())
+        except httpx.RequestError as e:
+            print("No se pudo enviar el correo")
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @action(detail=False, methods=["post"])
     def login(self, request):
-        """User sign in."""
         serializer = serializers.UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.save()
@@ -61,13 +75,12 @@ class UserViewSet(
 
     @action(detail=False, methods=["post"])
     def logout(self, request):
-        """User logout to the system"""
         serializer = serializers.UserLogoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         data = {"message": "Te has desconectado del sistema"}
         return Response(data, status=status.HTTP_200_OK)
-        
+
     @action(detail=True, methods=["post"])
     def password(self, request, pk=None):
         serializer = serializers.UserPasswordSerializer(data=request.data)

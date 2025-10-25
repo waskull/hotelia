@@ -45,9 +45,20 @@ class HotelSerializer(serializers.Serializer):
     address = serializers.CharField()
     description = serializers.CharField()
     image = serializers.ImageField()
+    services = serializers.CharField()
+    star_rating = serializers.IntegerField()
+
+class ReviewSerializer(serializers.Serializer):
+    rating = serializers.IntegerField()
+    comment = serializers.CharField(required=False)
+    hotel = serializers.IntegerField()
+
+    def validate(self, data):
+        if data["rating"] < 1 or data["rating"] > 5:
+            raise serializers.ValidationError("La calificacion debe estar entre 1 y 5")
+        return data
 
 class RoomSerializer(serializers.Serializer):
-    name = serializers.CharField()
     capacity = serializers.IntegerField()
     room_type = serializers.CharField()
     room_number = serializers.IntegerField()
