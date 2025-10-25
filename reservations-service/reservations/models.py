@@ -19,8 +19,14 @@ class PaymentMethod(models.TextChoices):
 
 # Create your models here.
 
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-class Payment(models.Model):
+    class Meta:
+        abstract = True
+
+class Payment(BaseModel):
     class Meta:
         verbose_name_plural = "Pagos"
         verbose_name = "Pago"
@@ -37,7 +43,7 @@ class Payment(models.Model):
         return f"Pago de {self.amount} para la reserva {self.reservation}"
 
 
-class Reservation(models.Model):
+class Reservation(BaseModel):
     class Meta:
         verbose_name_plural = "Reservas"
         verbose_name = "Reserva"

@@ -20,6 +20,8 @@ microservices = [
         'app_module': 'reservations_service.asgi:application'},
     {'name': 'notifications-service', 'port': 8004,
         'app_module': 'notifications_service.asgi:application'},
+    {'name': 'chat-service', 'port': 8005,
+     'app_module': 'config.asgi:application'},
 ]
 
 

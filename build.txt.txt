@@ -1,0 +1,1 @@
+pip install django djangorestframework djangorestframework-simplejwt Pillow httpx drf-spectacular drf-spectacular-sidecar python-dotenv uvicorn

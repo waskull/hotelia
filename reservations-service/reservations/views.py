@@ -16,6 +16,35 @@ GATEWAY_SERVICE_URL = settings.GATEWAY_SERVICE_URL
 AUTH_SERVICE_URL = settings.AUTH_SERVICE_URL
 
 
+def send_email(user_id, request, room_id, start_date, end_date, status, fullname=None, email=None):
+    try:
+        user = {}
+        if not fullname and not email:
+            user = httpx.get(f'{AUTH_SERVICE_URL}auth/{user_id}/', headers={
+            'Authorization': request.headers.get('Authorization')}).json()
+            fullname = f"{user['first_name']} {user['last_name']}"
+            email = user['email']
+        msg = f"Hola {fullname}, tu reserva para la habitación #{room_id} del {start_date} al {end_date} 11:00am"
+        subject = "Reserva realizada"
+        if status == Status.COMPLETED:
+            msg = f"{msg} ha sido realizada y esta esperando por ti."
+            subject = "Reserva Confirmada"
+        else:
+            msg = f"{msg} ha sido realizada y esta en espera por confirmación de la administración."
+        json = {
+            "subject": subject,
+            "body": msg,
+            "destinations": [email]
+        }
+        if email:
+            response = httpx.post(
+                f'{NOTIFICATIONS_SERVICE_URL}email/', json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_TOKEN})
+            response.raise_for_status()
+            print(response.json())
+    except httpx.RequestError as e:
+        print("No se pudo enviar el correo")
+
+
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
@@ -25,7 +54,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
     def stats(self, request):
         top_count_method = Payment.objects.values('payment_method').annotate(
             count=Count('payment_method')).order_by('-count')[:5]
-        top_users = Reservation.objects.filter(status=Status.COMPLETED).values('user_id').annotate(count=Count('user_id')).order_by('-count')
+        top_users = Reservation.objects.filter(status=Status.COMPLETED).values(
+            'user_id').annotate(count=Count('user_id')).order_by('-count')
         return Response({"top_method": top_count_method, "top_users": top_users}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
@@ -49,7 +79,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         city = self.request.query_params.get("city")
         start_date = self.request.query_params.get("start_date")
         end_date = self.request.query_params.get("end_date")
-
+        status = self.request.query_params.get("status")
         if city:
             queryset = queryset.filter(city__icontains=city)
 
@@ -62,7 +92,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
             # Excluir esas habitaciones del queryset principal
             queryset = queryset.exclude(room_id__in=reserved_rooms)
-
+        if status:
+            queryset = queryset.filter(status__icontains=status)
         return queryset
 
     @action(detail=False, methods=["get"])
@@ -134,8 +165,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user_id = request.data.get("user_id")
         is_cliente = "cliente" in request.user.groups
-        email: str = ""
-
+        email = ""
+        fullname = ""
         if user_id and is_cliente:
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": "No tienes permiso para crear una reserva a otro usuario."})
 
@@ -149,8 +180,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
                     f'{AUTH_SERVICE_URL}auth/{serializer.validated_data["user_id"]}/', headers={'Authorization': request.headers.get(
                         'Authorization')})
                 response.raise_for_status()
-                email = response.json()['email']
-                print(email)
+                json = response.json()
+                email = json.get("email")
+                fullname = f"{json['first_name']} {json['last_name']}"
+                print(email,fullname)
             except httpx.RequestError as e:
                 return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             except httpx.HTTPStatusError as exc:
@@ -191,6 +224,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
             Q(end_date__range=(start_date, end_date)) |
             # Caso: reserva que cubre todo el rango
             Q(start_date__lte=start_date, end_date__gte=end_date)
+        ).filter(
+            status__in=[Status.PENDING, Status.CONFIRMED, Status.PREPARING, Status.OCUPPIED]
         )
 
         if overlapping.exists():
@@ -201,20 +236,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         # Si está libre, crear la reserva
         self.perform_create(serializer)
-        try:
-            print(result)
-            json = {
-                "subject": "Reserva realizada",
-                "body": f"Hola {request.user.first_name} {request.user.last_name}, tu reserva para la habitación #{room_id} en el hotel {result['hotel']} del {start_date} al {end_date} ha sido realizada.",
-                "destinations": [email]
-            }
-            if (email):
-                response = httpx.post(
-                    f'{NOTIFICATIONS_SERVICE_URL}email/', json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_TOKEN})
-                response.raise_for_status()
-                print(response.json())
-        except httpx.RequestError as e:
-            print("No se pudo enviar el correo")
+        send_email(user_id=user_id, email=email, request=request, room_id=room_id, start_date=start_date, end_date=end_date, status=Status.PENDING, fullname=fullname)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
@@ -276,10 +298,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
             Q(end_date__range=(start_date, end_date)) |
             # Caso: reserva que cubre todo el rango
             Q(start_date__lte=start_date, end_date__gte=end_date)
+        ).filter(
+            status__in=[Status.PENDING]
         )
         if overlapping.exists():
             return Response(
-                {"error": "La habitación ya está reservada en este rango de fechas."},
+                {"error": "Una o la habitación ya está reservada en este rango de fechas."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -288,7 +312,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, pk, *args, **kwargs):
         reservation = Reservation.objects.get(pk=pk)
-        print(reservation)
         # return Response(status=status.HTTP_403_FORBIDDEN, data={"error": "ASD."})
         is_cliente = "cliente" in request.user.groups
         if reservation.user_id != request.user.id and is_cliente:
@@ -312,6 +335,13 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         reservation.status = new_status
         reservation.save()
+        if new_status == Status.OCUPPIED:
+            user_id = reservation.user_id
+            room_id = reservation.room_id
+            start_date = reservation.start_date
+            end_date = reservation.end_date
+            send_email(user_id, request, room_id,
+                       start_date, end_date, new_status)
         return Response({"message": "Reserva actualizada"}, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
