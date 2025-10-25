@@ -7,7 +7,7 @@ from PIL import Image
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 # Models
-from .models import Hotel, Room
+from .models import Hotel, Review, Room
 
 # User = get_user_model()
 
@@ -15,20 +15,36 @@ from .models import Hotel, Room
 class HotelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hotel
-        fields = ('id', 'name', 'city', 'address', 'description', 'image')
+        fields = ('id', 'name', 'city', 'address', 'description',
+                  'image', 'services', 'star_rating')
+
+    def get_image(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+        return None
 
     def validate_image(self, value):
-            if not value.name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                raise serializers.ValidationError("Solo se permite imagenes con extensiones .png o .jpg o .jpeg.")
-            try:
-                img = Image.open(value)
-                img.verify() # Verify if it's a valid image
-            except Exception:
-                raise serializers.ValidationError("Imagen invalida.")
-            return value
-    
+        if not value.name.lower().endswith(('.png', '.jpg', '.jpeg')):
+            raise serializers.ValidationError(
+                "Solo se permite imagenes con extensiones .png o .jpg o .jpeg.")
+        try:
+            img = Image.open(value)
+            img.verify()
+        except Exception:
+            raise serializers.ValidationError("Imagen invalida.")
+        return value
+
     def create(self, validated_data):
-        return Hotel.objects.create(**validated_data)
+        Hotel.objects.create(**validated_data)
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = "__all__"
+        extra_kwargs = {
+            "user_id": {"read_only": True},
+        }
 
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:

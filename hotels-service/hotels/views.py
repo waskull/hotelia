@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 from .authentication import UserAuthentication
 from rest_framework.decorators import action
-from .models import Hotel, Room
+from .models import Hotel, Review, Room
 from django.conf import settings
-from .serializers import HotelSerializer, RoomSerializer
+from .serializers import HotelSerializer, ReviewSerializer, RoomSerializer
 # Create your views here.
 RESERVATIONS_SERVICE_URL = settings.RESERVATIONS_SERVICE_URL
 
@@ -24,8 +24,10 @@ class HotelViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.IsAuthenticated]
     parser_classes = (MultiPartParser, FileUploadParser,)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
     def get_queryset(self):
-        # print("user: ", self.request.user.id)
         queryset = super().get_queryset()
         city = self.request.query_params.get("city")
         if city:
@@ -51,7 +53,8 @@ class HotelViewSet(viewsets.ModelViewSet):
         headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         url = f'{RESERVATIONS_SERVICE_URL}reservations/top_hotels/'
         try:
-            response = httpx.get(url, timeout=15, headers=headers, params=request.query_params)
+            response = httpx.get(
+                url, timeout=15, headers=headers, params=request.query_params)
             data = response.json()
             room_ids = []
 
@@ -96,6 +99,22 @@ class HotelViewSet(viewsets.ModelViewSet):
         except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+class ReviewViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        hotel_id = self.request.query_params.get("hotel_id")
+        if hotel_id:
+            queryset = queryset.filter(hotel_id=hotel_id)
+        return queryset
+    def create(self, request, *args, **kwargs) -> None:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user_id=self.request.user.id)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
@@ -108,3 +127,18 @@ class RoomViewSet(viewsets.ModelViewSet):
         if hotel_id:
             queryset = queryset.filter(hotel_id=hotel_id)
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        room_number = serializer.data.get("room_number")
+        hotel = serializer.data.get("hotel") or None
+        check = Room.objects.filter(room_number=room_number, hotel=hotel).exists()
+        if check:
+            return Response(
+                {"error": f"La habitación #{room_number} ya existe en el hotel {hotel}"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer) -> None:
+        Room.objects.create(**serializer.validated_data)

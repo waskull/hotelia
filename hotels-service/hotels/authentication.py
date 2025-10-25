@@ -28,6 +28,12 @@ class UserAuthentication(BaseAuthentication):
             user_id = user_data.get('id')
             if not user_id:
                 return None  # No hay ID de usuario en el encabezado
+            
+            is_active = user_data.get('is_active', False)
+            if not is_active:
+                raise AuthenticationFailed(
+                    "La solicitud fue rechazada. El usuario no esta activo."
+                )
 
             # 2. Crea un objeto de usuario en memoria con la info obtenida
 
