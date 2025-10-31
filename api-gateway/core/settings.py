@@ -91,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = [
 USERS_SERVICE_URL = os.getenv("USERS_SERVICE_URL")
 HOTELS_SERVICE_URL = os.getenv("HOTELS_SERVICE_URL")
 RESERVATIONS_SERVICE_URL = os.getenv("RESERVATIONS_SERVICE_URL")
-
+CHATBOT_SERVICE_URL = os.getenv("CHATBOT_SERVICE_URL")
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

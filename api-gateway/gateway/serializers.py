@@ -44,7 +44,11 @@ class HotelSerializer(serializers.Serializer):
     city = serializers.CharField()
     address = serializers.CharField()
     description = serializers.CharField()
+    payment_policy = serializers.CharField()
+    reservation_policy = serializers.CharField()
     image = serializers.ImageField()
+    phone = serializers.CharField()
+    email = serializers.EmailField(required=False)
     services = serializers.CharField()
     star_rating = serializers.IntegerField()
 
@@ -64,6 +68,7 @@ class RoomSerializer(serializers.Serializer):
     room_number = serializers.IntegerField()
     price_per_night = serializers.DecimalField(max_digits=10, decimal_places=2)
     hotel = serializers.IntegerField()
+    hotel_name = serializers.CharField(required=False)
 
 class RoomResponseSerializer(RoomSerializer):
     status = serializers.CharField()

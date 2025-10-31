@@ -1,4 +1,5 @@
 import httpx
+from json import JSONDecodeError
 #from asgiref.sync import async_to_sync
 from django.conf import settings
 # from rest_framework.views import APIView
@@ -14,7 +15,7 @@ from .serializers import *
 USERS_SERVICE_URL = settings.USERS_SERVICE_URL
 HOTELS_SERVICE_URL = settings.HOTELS_SERVICE_URL
 RESERVATIONS_SERVICE_URL = settings.RESERVATIONS_SERVICE_URL
-
+CHAT_SERVICE_URL = settings.CHATBOT_SERVICE_URL
 
 def getHeaders(request):
     return {'Authorization': request.headers.get(
@@ -152,6 +153,9 @@ class HotelView(ViewSet):
                 f'{HOTELS_SERVICE_URL}hotels/', timeout=15, headers=headers)
             return Response(response.json(), status=response.status_code)
         except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except JSONDecodeError as e:
+            print(e)
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def create(self, request, *args, **kwargs):
@@ -462,6 +466,16 @@ class PaymentView(ViewSet):
         try:
             response = httpx.delete(
                 f'{RESERVATIONS_SERVICE_URL}payments/{pk}/', headers=headers)
+            return Response(response.json(), status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+class ChatBotView(ViewSet):
+    def create(self, request, *args, **kwargs):
+        headers = getHeaders(request)
+        try:
+            response = httpx.post(
+                f'{CHAT_SERVICE_URL}llama/', json=request.data, headers=headers, timeout=1010)
             return Response(response.json(), status=response.status_code)
         except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
