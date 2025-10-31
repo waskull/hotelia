@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 NOTIFICATION_TOKEN = os.getenv("NOTIFICATION_TOKEN")
 NOTIFICATIONS_SERVICE_URL = os.getenv("NOTIFICATIONS_SERVICE_URL")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True if os.getenv("DEBUG", "False") == "True" else False
 
 ALLOWED_HOSTS = ["*"]
 

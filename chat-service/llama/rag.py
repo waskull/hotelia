@@ -4,7 +4,7 @@ from django.conf import settings
 import json
 
 OLLAMA_API = getattr(settings, "OLLAMA_API", "http://localhost:11434/api")
-
+MODEL_NAME = getattr(settings, "MODEL_NAME", "llama3.2:3b")
 client = chromadb.PersistentClient(path="./chroma_store")
 collection_docs = client.get_or_create_collection("hotel_docs")
 collection_chat = client.get_or_create_collection("chat_history")
@@ -75,7 +75,7 @@ def generate_answer(query, full_context):
         try:
             print("haciendo peticion")
             resp = client_http.post(f"{OLLAMA_API}generate", json={
-                "model": "llama3.2:1b",
+                "model": MODEL_NAME,
                 "prompt": prompt,
                 "stream": False
             })

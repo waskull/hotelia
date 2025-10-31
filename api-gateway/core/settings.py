@@ -15,8 +15,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 RESERVATION_TOKEN = os.getenv("RESERVATION_TOKEN")
 HOTEL_SERVICE_TOKEN = os.getenv("HOTEL_SERVICE_TOKEN")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+DEBUG = True if os.getenv("DEBUG", "False") == "True" else False
 ALLOWED_HOSTS = ["*"]
 
 

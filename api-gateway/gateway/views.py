@@ -8,7 +8,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+#from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 from .serializers import *
 # Create your views here.
@@ -472,10 +472,9 @@ class PaymentView(ViewSet):
 
 class ChatBotView(ViewSet):
     def create(self, request, *args, **kwargs):
-        headers = getHeaders(request)
         try:
             response = httpx.post(
-                f'{CHAT_SERVICE_URL}llama/', json=request.data, headers=headers, timeout=1010)
+                f'{CHAT_SERVICE_URL}llama', json=request.data, timeout=1010)
             return Response(response.json(), status=response.status_code)
         except httpx.RequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

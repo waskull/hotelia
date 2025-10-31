@@ -25,7 +25,7 @@ RESERVATIONS_SERVICE_URL = os.getenv("RESERVATIONS_SERVICE_URL")
 NOTIFICATIONS_SERVICE_URL = os.getenv("NOTIFICATIONS_SERVICE_URL")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True if os.getenv("DEBUG", "False") == "True" else False
 
 ALLOWED_HOSTS = ["*"]
 
