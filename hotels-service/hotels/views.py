@@ -113,7 +113,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs) -> None:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user_id=self.request.user.id)
+        user_id = self.request.user.id
+        if user_id is None:
+            return Response({"error": "Necesitas estar logeado para realizar una reseña"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(user_id=user_id)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class RoomViewSet(viewsets.ModelViewSet):
