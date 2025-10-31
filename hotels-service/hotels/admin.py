@@ -1,9 +1,9 @@
+""" 
 from django.apps import AppConfig
 from django.contrib import admin
 from .models import Hotel, Room
-
 # Register your models here.
-""" class HotelConfig(AppConfig):
+class HotelConfig(AppConfig):
     name = "Hotel"
     verbose_name = "Hoteles"
     
@@ -11,7 +11,7 @@ from .models import Hotel, Room
 class RoomConfig(AppConfig):
     name = "Habitación"
     verbose_name = "Habitaciones"
- """
+
 
 class HotelsAdmin(admin.ModelAdmin):
     list_display = ('name', 'city', 'address', 'description', 'image')
@@ -21,3 +21,4 @@ class RoomsAdmin(admin.ModelAdmin):
 
 admin.site.register(Hotel,HotelsAdmin)
 admin.site.register(Room, RoomsAdmin)
+ """

@@ -10,6 +10,8 @@ _client = httpx.Client(base_url=settings.AUTH_SERVICE_URL, timeout=7.0)
 
 class UserAuthentication(BaseAuthentication):
     def authenticate(self, request):
+        if request.method == 'GET':
+            return (AnonymousUser(), None)
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None

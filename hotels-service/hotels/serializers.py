@@ -13,10 +13,15 @@ from .models import Hotel, Review, Room
 
 
 class HotelSerializer(serializers.ModelSerializer):
+    # total_rooms = serializers.ReadOnlyField()
+
+    # def get_total_rooms(self, obj):
+    #     return Room.objects.filter(hotel=obj).count()
+
     class Meta:
         model = Hotel
         fields = ('id', 'name', 'city', 'address', 'description',
-                  'image', 'services', 'star_rating')
+                  'image', 'services', 'star_rating', 'payment_policy', 'reservation_policy', 'phone','email')
 
     def get_image(self, obj):
         if obj.image:
@@ -47,6 +52,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         }
 
 class RoomSerializer(serializers.ModelSerializer):
+    hotel_name = serializers.ReadOnlyField(source='hotel.name')
     class Meta:
         model = Room
         fields = "__all__"

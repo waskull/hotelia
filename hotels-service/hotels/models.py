@@ -15,9 +15,13 @@ class BaseModel(models.Model):
 class Hotel(BaseModel):
     name = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
     city = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
-    address = models.CharField(max_length=255, null=False, validators=[
+    address = models.TextField(null=False, validators=[
                                MinLengthValidator(3)])
-    description = models.CharField(max_length=255, null=True)
+    description = models.TextField(null=True)
+    phone = models.CharField(max_length=40, null=False)
+    email = models.EmailField(null=True)
+    payment_policy = models.TextField()
+    reservation_policy = models.TextField()
     image = models.ImageField(upload_to='images/', null=True, blank=True)
     services = models.TextField(null=True, blank=True)
     star_rating = models.PositiveSmallIntegerField(default=1, validators=[
