@@ -44,6 +44,59 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False, # Permite que se utilicen loggers preexistentes (como 'django')
+
+    'formatters': {
+        # Define cómo se ve cada línea de log
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        # Define dónde van los logs
+        'console': {
+            'level': 'INFO', # Nivel mínimo para el output de la consola
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'level': 'DEBUG', # Nivel mínimo para el output del archivo
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'gateway.log'), # Ruta del archivo de log
+            'maxBytes': 1024*1024*5, # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+
+    'loggers': {
+        # Define qué loggers existen y qué handlers usan
+        '': {  # Logger "root" (captura todo lo que no tiene un logger más específico)
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': { # Logs específicos de las peticiones HTTP (DRF)
+            'handlers': ['console'],
+            'level': 'WARNING', # Por defecto, Django sólo loggea WARNING o superior de peticiones
+            'propagate': False,
+        },
+        'gateway': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        }
+    }
+}
+
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [

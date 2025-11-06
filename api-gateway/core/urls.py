@@ -20,16 +20,13 @@ from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from gateway.views import (
-    UserLoginView, UserRegisterView, UserProfileView, UserRefreshTokenView,UserView,
-    HotelView, ReservationView,ReviewView, RoomView, PaymentView, top, ChatBotView
+    AuthView, UserRefreshTokenView,UserView,
+    HotelView, ReservationView,ReviewView, RoomView, PaymentView, ChatBotView
 )
 
 router = DefaultRouter()
-router.register(r'auth/login', UserLoginView, basename="user-login")
-router.register(r'auth/register', UserRegisterView, basename='user-registration')
-router.register(r'auth/me', UserProfileView, basename="user-profile")
-router.register(r'auth/refresh', UserRefreshTokenView,
-                basename="user-refresh-token")
+router.register(r'auth', AuthView, basename="auth")
+router.register(r'auth/refresh', UserRefreshTokenView, basename="user-refresh-token")
 router.register(r'users', UserView, basename="users")
 router.register(r'hotels', HotelView, basename="hotels")
 router.register(r'reviews', ReviewView, basename="reviews")
@@ -40,7 +37,6 @@ router.register(r'chatbot', ChatBotView, basename="chatbot")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('top', top, name='top'),
     path('', include(router.urls)),
     path('api_authorization/', include('rest_framework.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
