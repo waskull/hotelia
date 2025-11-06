@@ -17,6 +17,13 @@ class ReservationCountSerializer(serializers.Serializer):
     count = serializers.IntegerField()
     room_id = serializers.IntegerField(read_only=True)
 
+class ReservationCancelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['user_id', 'id']
+        extra_kwargs = {
+            "id": {"read_only": True}
+        }
 
 class ReservationSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(required=False)
