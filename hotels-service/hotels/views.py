@@ -37,10 +37,6 @@ class HotelViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        already_exists = Hotel.objects.filter(
-            Q(name=serializer.data['name']) & Q(city=serializer.data['city'])).exists()
-        if already_exists:
-            return Response({"error": f"El hotel {serializer.data['name']} ya existe en la ciudad de {serializer.data['city']}"}, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -134,13 +130,6 @@ class RoomViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        room_number = serializer.data.get("room_number")
-        hotel = serializer.data.get("hotel") or None
-        check = Room.objects.filter(room_number=room_number, hotel=hotel).exists()
-        if check:
-            return Response(
-                {"error": f"La habitación #{room_number} ya existe en el hotel {hotel}"}, status=status.HTTP_400_BAD_REQUEST)
-        
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     def perform_create(self, serializer) -> None:

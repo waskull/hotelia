@@ -13,7 +13,7 @@ class BaseModel(models.Model):
 
 
 class Hotel(BaseModel):
-    name = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
+    name = models.CharField(max_length=100, unique=True, validators=[MinLengthValidator(2)])
     city = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
     address = models.TextField(null=False, validators=[
                                MinLengthValidator(3)])

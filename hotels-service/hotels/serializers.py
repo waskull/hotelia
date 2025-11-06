@@ -1,5 +1,6 @@
 from django.contrib.auth import password_validation, authenticate
 from django.contrib.auth.models import Group, Permission
+from rest_framework.validators import UniqueTogetherValidator
 from PIL import Image
 # from django.contrib.auth import get_user_model
 
@@ -22,6 +23,18 @@ class HotelSerializer(serializers.ModelSerializer):
         model = Hotel
         fields = ('id', 'name', 'city', 'address', 'description',
                   'image', 'services', 'star_rating', 'payment_policy', 'reservation_policy', 'phone','email')
+
+    validators = [
+        UniqueTogetherValidator(
+            queryset=Hotel.objects.all(),
+            fields=['name', 'city'],
+            message="El hotel ya existe en la ciudad seleccionada."
+        ),
+        UniqueValidator(
+            queryset=Hotel.objects.all(),
+            message="El hotel ya existe."
+        )
+    ]
 
     def get_image(self, obj):
         if obj.image:
@@ -56,3 +69,11 @@ class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = "__all__"
+
+    validators = [
+            UniqueTogetherValidator(
+                queryset=Room.objects.all(),
+                fields=['room_number', 'hotel'],
+                message="Esta habitación ya existe en el hotel seleccionado. Por favor, elige un número diferente."
+            )
+        ]
