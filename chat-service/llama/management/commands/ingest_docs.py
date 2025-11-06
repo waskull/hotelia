@@ -1,7 +1,7 @@
 import httpx
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from llama import rag
+from llama.rag_llamacpp import add_document
 
 HOTELS_API = f"{settings.HOTELS_SERVICE_URL}hotels/"
 ROOMS_API = f"{settings.HOTELS_SERVICE_URL}rooms/"
@@ -49,7 +49,7 @@ class Command(BaseCommand):
                     f"Política de reservaciones: {reservation_policy}."
                 )
                 print(text)
-                rag.add_document(
+                add_document(
                     doc_id=f"hotel_{id}",
                     text=text,
                     metadata={"source": "hotel", "id": id}
@@ -80,10 +80,10 @@ class Command(BaseCommand):
                     f"Habitación {number} del hotel {hotel_name}. "
                     f"Tipo de habitación: {room_type}. "
                     f"Capacidad: {capacity}. "
-                    f"Precio por noche: {price}."
+                    f"Precio por noche: {price}$."
                 )
                 print(text)
-                rag.add_document(
+                add_document(
                     doc_id=f"room_{id}",
                     text=text,
                     metadata={"source": "room", "id": id}

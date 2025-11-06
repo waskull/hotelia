@@ -1,10 +1,9 @@
 import chromadb
 import httpx
 from django.conf import settings
-import json
 
 OLLAMA_API = getattr(settings, "OLLAMA_API", "http://localhost:11434/api")
-MODEL_NAME = getattr(settings, "MODEL_NAME", "llama3.2:3b")
+MODEL_NAME = getattr(settings, "MODEL_NAME", "no_model")
 client = chromadb.PersistentClient(path="./chroma_store")
 collection_docs = client.get_or_create_collection("hotel_docs")
 collection_chat = client.get_or_create_collection("chat_history")
@@ -47,7 +46,7 @@ def query_user_history(user_query, user_id, n_results=3):
     results = collection_chat.query(
         query_embeddings=[q_embed],
         n_results=n_results,
-        where={"user_id": user_id or "anon"}
+        where={"user_id": user_id}
     )
     if results and results["documents"]:
         return results["documents"][0]
@@ -59,7 +58,7 @@ def store_user_interaction(user_id, user_query, bot_answer):
     collection_chat.add(
         ids=[f"chat_{user_id or 'anon'}_{hash(user_query)}"],
         documents=[chat_text],
-        metadatas=[{"user_id": user_id or "anon"}],
+        metadatas=[{"user_id": user_id}],
         embeddings=[emb],
     )
 
@@ -87,9 +86,38 @@ def generate_answer(query, full_context):
         except httpx.RequestError as e:
             print(e)
             return ERROR_MESSAGE
+        
+def get_user_history(user_id: str, limit: int = 10):
+    """Obtiene las últimas interacciones almacenadas de un usuario desde ChromaDB."""
+    results = collection_chat.get(where={"user_id": user_id})
+    docs = results.get("documents", [])
 
-def handle_chat_query(user_query: str, user_id=None):
-    context_docs = query_documents(user_query)
+    history = []
+    for doc in docs[-limit:]:
+        parts = doc.split("\nAsistente:")
+        if len(parts) == 2:
+            query = parts[0].replace("Usuario:", "").strip()
+            answer = parts[1].strip()
+            history.append({"query": query, "answer": answer})
+    return list(reversed(history))  # devuelve en orden cronológico
+
+def search_user_history(user_id: str, search: str, n_results: int = 5):
+    results = collection_chat.get(where={"user_id": user_id})
+    docs = results.get("documents", [])
+    filtered = [doc for doc in docs if search.lower() in doc.lower()]
+    filtered = filtered[-n_results:]
+
+    history = []
+    for doc in docs:
+        parts = doc.split("\nAsistente:")
+        if len(parts) == 2:
+            query = parts[0].replace("Usuario:", "").strip()
+            answer = parts[1].strip()
+            history.append({"query": query, "answer": answer})
+    return history
+
+def handle_chat_query(query: str, user_id: str = "anon"):
+    """ context_docs = query_documents(user_query)
     context_text = "\n\n".join(context_docs) if context_docs else "Sin contexto de documentos."
     history_docs = query_user_history(user_query, user_id)
     history_text = "\n\n".join(history_docs) if history_docs else "Sin historial previo relevante."
@@ -98,4 +126,16 @@ def handle_chat_query(user_query: str, user_id=None):
     print("Respuesta Generada:", answer)
     if answer != ERROR_MESSAGE: store_user_interaction(user_id, user_query, answer)
     print("Respuesta almacenada en la base de datos.")
+    return answer """
+
+
+    docs = query_documents(query)
+    context = "\n".join(docs) if docs else "Sin contexto de documentos."
+    user_history = query_user_history(query, user_id)
+    context += "\n\nHistorial relevante:\n"
+    if user_history:
+        context += "\n".join(user_history)
+    else: context += "\nSin historial previo relevante.\n"
+    answer = generate_answer(query, context)
+    if answer != ERROR_MESSAGE: store_user_interaction(user_id, query, answer)
     return answer
