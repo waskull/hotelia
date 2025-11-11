@@ -16,7 +16,7 @@ class UserAuthentication(BaseAuthentication):
         try:
             # 1. Realiza una llamada al auth-service para obtener la info del usuario
             headers = {'Authorization': auth_header}
-            response =  _client.get("auth/me/", headers=headers)
+            response =  _client.post("auth/me/", headers=headers)
             response.raise_for_status()  # Lanza un error para códigos de estado 4xx/5xx
 
             try:

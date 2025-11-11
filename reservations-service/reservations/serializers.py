@@ -17,6 +17,14 @@ class ReservationCountSerializer(serializers.Serializer):
     count = serializers.IntegerField()
     room_id = serializers.IntegerField(read_only=True)
 
+class ExtendReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['end_date', 'id']
+        extra_kwargs = {
+            "id": {"read_only": True}
+        }
+
 class ReservationCancelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
@@ -26,7 +34,7 @@ class ReservationCancelSerializer(serializers.ModelSerializer):
         }
 
 class ReservationSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(required=False)
+    user_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = Reservation

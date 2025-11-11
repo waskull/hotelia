@@ -109,7 +109,9 @@ class UserViewSet(
         except User.DoesNotExist:
             return Response({"error": "Usuario no encontrado"}, status=404)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["post"])
     def me(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "No estas autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
         data = self.get_serializer(request.user).data
         return Response(data, status=status.HTTP_200_OK)

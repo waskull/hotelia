@@ -3,10 +3,11 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.conf import settings
+from datetime import datetime
 import httpx
 # from asgiref.sync import async_to_sync
 from .models import Reservation, Payment, Status, PaymentMethod
-from .serializers import ReservationCountSerializer,ReservationCancelSerializer, ReservationSerializer, UpdateReservationSerializer, PaymentSerializer, ReservationPaymentSerializer
+from .serializers import ReservationCountSerializer, ExtendReservationSerializer, ReservationSerializer, UpdateReservationSerializer, PaymentSerializer, ReservationPaymentSerializer
 # from .authentication import UserAuthentication
 # Create your views here.
 
@@ -21,7 +22,7 @@ def send_email(user_id, request, room_id, start_date, end_date, status, fullname
         user = {}
         if not fullname and not email:
             user = httpx.get(f'{AUTH_SERVICE_URL}auth/{user_id}/', headers={
-            'Authorization': request.headers.get('Authorization')}).json()
+                'Authorization': request.headers.get('Authorization')}).json()
             fullname = f"{user['first_name']} {user['last_name']}"
             email = user['email']
         msg = f"Hola {fullname}, tu reserva para la habitación #{room_id} del {start_date} al {end_date} 11:00am"
@@ -86,8 +87,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if start_date and end_date:
             # Buscar habitaciones que ya tienen reservas en ese rango
             reserved_rooms = Reservation.objects.filter(
-                start_date__lt=end_date, # La nueva fecha de fin debe ser posterior a la fecha de inicio de la reserva existente.
-                end_date__gt=start_date,  # La nueva fecha de inicio debe ser anterior a la fecha de fin de la reserva existente.
+                # La nueva fecha de fin debe ser posterior a la fecha de inicio de la reserva existente.
+                start_date__lt=end_date,
+                # La nueva fecha de inicio debe ser anterior a la fecha de fin de la reserva existente.
+                end_date__gt=start_date,
             ).values_list("room_id", flat=True)
 
             # Excluir esas habitaciones del queryset principal
@@ -162,6 +165,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request, *args, **kwargs):
+        print("llegando")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_id = request.data.get("user_id")
@@ -184,7 +188,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 json = response.json()
                 email = json.get("email")
                 fullname = f"{json['first_name']} {json['last_name']}"
-                print(email,fullname)
+                print(email, fullname)
             except httpx.RequestError as e:
                 return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             except httpx.HTTPStatusError as exc:
@@ -223,7 +227,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
             start_date__lt=end_date,
             end_date__gt=start_date,
         ).filter(
-            status__in=[Status.PENDING, Status.CONFIRMED, Status.PREPARING, Status.OCUPPIED]
+            status__in=[Status.PENDING, Status.CONFIRMED,
+                        Status.PREPARING, Status.OCUPPIED]
         )
 
         if overlapping.exists():
@@ -234,7 +239,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         # Si está libre, crear la reserva
         self.perform_create(serializer)
-        send_email(user_id=user_id, email=email, request=request, room_id=room_id, start_date=start_date, end_date=end_date, status=Status.PENDING, fullname=fullname)
+        send_email(user_id=user_id, email=email, request=request, room_id=room_id,
+                   start_date=start_date, end_date=end_date, status=Status.PENDING, fullname=fullname)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
@@ -287,7 +293,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
         ).exclude(
             pk=reservation.pk
         ).filter(
-            status__in=[Status.PENDING, Status.CONFIRMED, Status.PREPARING, Status.OCUPPIED]
+            status__in=[Status.PENDING, Status.CONFIRMED,
+                        Status.PREPARING, Status.OCUPPIED]
         )
 
         if overlapping.exists():
@@ -295,7 +302,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 {"error": "La habitación ya está reservada por otra persona en este rango de fechas."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
         # Recálculo del precio total si las fechas o la habitación cambiaron
         if start_date != reservation.start_date or end_date != reservation.end_date or room_id != reservation.room_id:
             cost_night = 0.0
@@ -313,7 +320,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             days = int((end_date - start_date).days)
             total: float = days * float(cost_night)
             serializer.validated_data["total_price"] = total
-            
+
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -355,28 +362,30 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["post"])
     def extend_reservation(self, request, pk=None):
         reservation = self.get_object()
+        seri = ExtendReservationSerializer(data=request.data)
+        seri.is_valid(raise_exception=True)
+        end = Reservation.objects.get(pk=pk).end_date
         new_end_date_str = request.data.get("end_date")
-
         if not new_end_date_str:
             return Response({"error": "La nueva fecha de fin ('end_date') es requerida."}, status=status.HTTP_400_BAD_REQUEST)
-            
+
         try:
-            new_end_date = date.fromisoformat(new_end_date_str)
+            new_end_date = datetime.fromisoformat(new_end_date_str)
+            new_end_date = new_end_date.date()
         except ValueError:
             return Response({"error": "Formato de fecha de fin inválido. Use formato YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
-
-        if reservation.status != Status.PENDING:
-            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": "Solo se puede extender una reserva con estado PENDIENTE."})
+        if reservation.status == Status.CANCELLED or reservation.status == Status.COMPLETED:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": "Esta reserva ya no puede extenderse."})
 
         is_cliente = "cliente" in request.user.groups
         if reservation.user_id != request.user.id and is_cliente:
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": "No tienes permiso para actualizar esta reserva."})
 
-        if new_end_date <= reservation.end_date:
+        if new_end_date <= end:
             return Response(
                 {"error": "La nueva fecha de fin debe ser estrictamente posterior a la fecha de fin actual."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -392,21 +401,24 @@ class ReservationViewSet(viewsets.ModelViewSet):
         ).exclude(
             pk=reservation.pk
         ).filter(
-            status__in=[Status.PENDING, Status.CONFIRMED, Status.PREPARING, Status.OCUPPIED]
+            status__in=[Status.PENDING, Status.CONFIRMED,
+                        Status.PREPARING, Status.OCUPPIED]
         )
-
+        print("432")
         if overlapping.exists():
             return Response(
                 {"error": "No es posible extender la reserva. La habitación ya ha sido reservada por otra persona en el nuevo rango de fechas."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # 4. Recálculo del precio total
         try:
+            print("res")
             response = httpx.get(
                 f'{HOTELS_SERVICE_URL}rooms/{room_id}/', headers={'Authorization': request.headers.get('Authorization')})
             response.raise_for_status()
             result = response.json()
+            print("after")
             cost_night = float(result['price_per_night'])
         except httpx.RequestError:
             return Response({'error': 'Error al contactar el servicio de hoteles para obtener el precio.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -419,6 +431,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation.end_date = new_end_date
         reservation.total_price = new_total_price
         reservation.save()
-        
+
         serializer = self.get_serializer(reservation)
         return Response(serializer.data, status=status.HTTP_200_OK)
