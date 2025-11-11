@@ -88,7 +88,6 @@ def generate_answer(query, full_context):
             return ERROR_MESSAGE
         
 def get_user_history(user_id: str, limit: int = 10):
-    """Obtiene las últimas interacciones almacenadas de un usuario desde ChromaDB."""
     results = collection_chat.get(where={"user_id": user_id})
     docs = results.get("documents", [])
 
@@ -117,18 +116,6 @@ def search_user_history(user_id: str, search: str, n_results: int = 5):
     return history
 
 def handle_chat_query(query: str, user_id: str = "anon"):
-    """ context_docs = query_documents(user_query)
-    context_text = "\n\n".join(context_docs) if context_docs else "Sin contexto de documentos."
-    history_docs = query_user_history(user_query, user_id)
-    history_text = "\n\n".join(history_docs) if history_docs else "Sin historial previo relevante."
-    full_context = f"=== Historial relevante ===\n{history_text}\n\n=== Información base ===\n{context_text}"
-    answer = generate_answer(user_query, full_context)
-    print("Respuesta Generada:", answer)
-    if answer != ERROR_MESSAGE: store_user_interaction(user_id, user_query, answer)
-    print("Respuesta almacenada en la base de datos.")
-    return answer """
-
-
     docs = query_documents(query)
     context = "\n".join(docs) if docs else "Sin contexto de documentos."
     user_history = query_user_history(query, user_id)

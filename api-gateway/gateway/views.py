@@ -4,24 +4,37 @@ from json import JSONDecodeError
 import httpx
 from django.conf import settings
 from rest_framework import status
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.parsers import FileUploadParser, MultiPartParser
+#from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 from .serializers import (
+    ReservationSerializer,
     UserRegisterSerializer,
     UserLoginSerializer,
     UserRefreshSerializer,
     UserSerializer,
     UpdateUserSerializer,
     UpdateUserPasswordSerializer,
+    UserProfileResponseSerializer,
     HotelSerializer,
+    CreateReservationSerializer,
+    UpdateReservationSerializer,
+    ExtendReservationSerializer,
     RoomSerializer,
     RoomResponseSerializer,
     ReviewSerializer,
     PaymentSerializer,
+    ChatRequestSerializer,
 )
+
+from .auth_schemes import ExternalServiceAuthentication
+
+# Asegúrate de que 'ExternalBearerAuth' es el 'name' definido en tu OpenApiAuthenticationExtension
+SECURITY_SCHEME_NAME = 'ExternalBearerAuth'
 
 
 logger = logging.getLogger("gateway")
@@ -33,10 +46,11 @@ HTTP_TIMEOUT = getattr(settings, "GATEWAY_HTTP_TIMEOUT", 15)
 HTTP_MAX_CONNECTIONS = getattr(settings, "GATEWAY_HTTP_MAX_CONNECTIONS", 50)
 HTTP_MAX_KEEPALIVE = getattr(settings, "GATEWAY_HTTP_MAX_KEEPALIVE", 10)
 
-#Un cliente global que reutiliza conexiones
+# Un cliente global que reutiliza conexiones
 CLIENT = httpx.Client(
     timeout=httpx.Timeout(HTTP_TIMEOUT),
-    limits=httpx.Limits(max_connections=HTTP_MAX_CONNECTIONS, max_keepalive_connections=HTTP_MAX_KEEPALIVE),
+    limits=httpx.Limits(max_connections=HTTP_MAX_CONNECTIONS,
+                        max_keepalive_connections=HTTP_MAX_KEEPALIVE),
 )
 
 
@@ -69,8 +83,14 @@ http_client = httpx.Client(
     limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
 )
 
+
+@extend_schema(
+    auth=[],
+    #    auth=[] significa "ningún esquema de seguridad requerido".
+    methods=['GET'],
+)
 class BaseViewSet(ViewSet):
-    #Base reutilizable para todos los microservicios del Gateway. Usa sesión httpx global con keepalive y logging.
+    # Base reutilizable para todos los microservicios del Gateway. Usa sesión httpx global con keepalive y logging.
     SERVICE_URL = None
 
     def get_headers(self, request):
@@ -94,9 +114,10 @@ class BaseViewSet(ViewSet):
 
         try:
             logger.info(f"{method.upper()} {url}")
-            response = http_client.request(method, url, headers=headers, **kwargs)
+            response = http_client.request(
+                method, url, headers=headers, **kwargs)
             logger.info(f"{response.status_code} {url}")
-            
+
             try:
                 data = response.json()
             except ValueError:
@@ -118,25 +139,43 @@ class BaseViewSet(ViewSet):
             )
 
 
-class AuthView(BaseViewSet):
+@extend_schema(
+    auth=[],
+    methods=['POST'],
+    summary="Login de usuarios",
+)
+class AuthLoginView(BaseViewSet):
+    SERVICE_URL = settings.USERS_SERVICE_URL
+    serializer_class = UserLoginSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self._request("POST", "auth/login/", request=request, json=serializer.validated_data)
+
+
+class AuthRegisterView(BaseViewSet):
+    SERVICE_URL = settings.USERS_SERVICE_URL
+    serializer_class = UserRegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self._request("POST", "auth/register/", request=request, json=serializer.validated_data)
+
+
+class AuthProfileView(BaseViewSet):
     SERVICE_URL = settings.USERS_SERVICE_URL
 
+    @extend_schema(
+        responses=UserProfileResponseSerializer,
+        summary="Obtiene el perfil del usuario autenticado"
+    )
     @action(detail=False, methods=["post"])
-    def login(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return self._request("POST", "auth/login/", data=serializer.validated_data)
-
-    @action(detail=False, methods=["post"])
-    def register(self, request):
-        serializer = UserRegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return self._request("POST", "auth/register/", data=request.data)
-
-    @action(detail=False, methods=["get"])
     def profile(self, request):
-        return self._request("GET", "auth/me/", request=request)
-    
+        return self._request("post", "auth/me/", request=request)
+
+
 class UserRefreshTokenView(BaseViewSet):
     SERVICE_URL = USERS_SERVICE_URL
     serializer_class = UserRefreshSerializer
@@ -145,6 +184,7 @@ class UserRefreshTokenView(BaseViewSet):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         return self._request("POST", "token/refresh/", request=request, json=serializer.validated_data)
+
 
 class UserView(BaseViewSet):
     SERVICE_URL = USERS_SERVICE_URL
@@ -187,7 +227,6 @@ class HotelView(BaseViewSet):
             files = {"image": (image.name, image.file, image.content_type)}
             return self._request("POST", "hotels/", request=request, files=files, data=data, headers=headers, timeout=30)
 
-
         return self._request("POST", "hotels/", request=request, json=request.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
@@ -199,17 +238,30 @@ class HotelView(BaseViewSet):
         files = None
         if "image" in request.FILES:
             image = request.FILES["image"]
-          
+
             files = {"image": (image.name, image.file, image.content_type)}
-           
+
             return self._request("PUT", f"hotels/{pk}/", request=request, files=files, data=data, headers=headers, timeout=30)
-        
 
     def destroy(self, request, pk=None, *args, **kwargs):
         return self._request("DELETE", f"hotels/{pk}/", request=request)
 
-    @action(detail=False, methods=["get"])
-    def top(self, request):
+
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='global',
+            type=OpenApiTypes.BOOL,
+            location=OpenApiParameter.QUERY,
+            description='Para para traer el top global de hoteles',
+            required=False,
+        ),
+    ]
+)
+class HotelTopView(BaseViewSet):
+    SERVICE_URL = HOTELS_SERVICE_URL
+
+    def list(self, request, *args, **kwargs):
         return self._request("GET", "hotels/top/", request=request, params=request.query_params)
 
 
@@ -221,8 +273,9 @@ class ReviewView(BaseViewSet):
         return self._request("GET", "reviews/", request=request, params=request.query_params)
 
     def create(self, request, *args, **kwargs):
-        
-        self.SERVICE_TOKEN_HEADER = ("X-Hotel-Gateway-Token", getattr(settings, "HOTEL_SERVICE_TOKEN", ""))
+
+        self.SERVICE_TOKEN_HEADER = (
+            "X-Hotel-Gateway-Token", getattr(settings, "HOTEL_SERVICE_TOKEN", ""))
         return self._request("POST", "reviews/", request=request, json=request.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
@@ -257,14 +310,25 @@ class RoomView(BaseViewSet):
 
 class ReservationView(BaseViewSet):
     SERVICE_URL = RESERVATIONS_SERVICE_URL
-    
-    SERVICE_TOKEN_HEADER = ("X-Reservation-Gateway-Token", getattr(settings, "RESERVATION_TOKEN", ""))
+    SERVICE_TOKEN_HEADER = ("X-Reservation-Gateway-Token",
+                            getattr(settings, "RESERVATION_TOKEN", ""))
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateReservationSerializer
+        if self.action == "update":
+            return UpdateReservationSerializer
+        if self.action == "extend":
+            return ExtendReservationSerializer
+        return None
 
     def list(self, request, *args, **kwargs):
         return self._request("GET", "reservations/", request=request, params=request.query_params)
 
     def create(self, request, *args, **kwargs):
-        return self._request("POST", "reservations/", request=request, json=request.data, timeout=30)
+        serializer = CreateReservationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self._request("POST", "reservations/", request=request, json=serializer.data, timeout=30)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         return self._request("GET", f"reservations/{pk}/", request=request)
@@ -273,6 +337,9 @@ class ReservationView(BaseViewSet):
     def payments(self, request, pk=None):
         return self._request("GET", f"reservations/{pk}/payments/", request=request)
 
+    @action(detail=False, methods=["POST"])
+    def user(self, request):
+        return self._request("GET", f"reservations/user/", request=request)
 
     def partial_update(self, request, pk=None, *args, **kwargs):
         return self._request("PATCH", f"reservations/{pk}/", request=request, json=request.data)
@@ -282,15 +349,23 @@ class ReservationView(BaseViewSet):
 
     def destroy(self, request, pk=None, *args, **kwargs):
         return self._request("DELETE", f"reservations/{pk}/", request=request)
+
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         return self._request("POST", f"reservations/{pk}/cancel/", request=request)
+
+    @action(detail=True, methods=["post"])
+    def extend(self, request, pk=None):
+        serializer = ExtendReservationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self._request("POST", f"reservations/{pk}/extend_reservation/", request=request, json=serializer.data)
 
 
 class PaymentView(BaseViewSet):
     SERVICE_URL = RESERVATIONS_SERVICE_URL
     serializer_class = PaymentSerializer
-    SERVICE_TOKEN_HEADER = ("X-Reservation-Gateway-Token", getattr(settings, "RESERVATION_TOKEN", ""))
+    SERVICE_TOKEN_HEADER = ("X-Reservation-Gateway-Token",
+                            getattr(settings, "RESERVATION_TOKEN", ""))
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
@@ -314,15 +389,68 @@ class PaymentView(BaseViewSet):
 
 class ChatBotView(BaseViewSet):
     SERVICE_URL = CHAT_SERVICE_URL
+    serializer_class = ChatRequestSerializer
 
     def create(self, request, *args, **kwargs):
         return self._request("POST", "llamacpp/", request=request, json=request.data, timeout=1010)
 
-    def retrieve(self, request, pk=None, *args, **kwargs):
-        return self._request("GET", f"history/{pk}/", request=request, timeout=12)
-    
-class OllamaChatBotView(BaseViewSet):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='search',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Para buscar en la conversación de llama.cpp',
+                required=False,
+            ),
+        ],
+        summary="Obtiene las peticiones y las respuestas del usuario con llama.cpp"
+    )
+    def list(self, request, *args, **kwargs):
+        return self._request("GET", "llamacpp/", request=request, timeout=12, params=request.query_params)
+
+
+class GeminiChatBotView(BaseViewSet):
     SERVICE_URL = CHAT_SERVICE_URL
+    serializer_class = ChatRequestSerializer
 
     def create(self, request, *args, **kwargs):
-        return self._request("POST", "llama/", request=request, json=request.data, timeout=1010)
+        return self._request("POST", "gemini/", request=request, json=request.data, timeout=60)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='search',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Para buscar en la conversación de gemini',
+                required=False,
+            ),
+        ],
+        summary="Obtiene las peticiones y las respuestas del usuario"
+    )
+    def list(self, request, *args, **kwargs):
+        return self._request("GET", "gemini/", request=request, timeout=12, params=request.query_params)
+
+
+class OllamaChatBotView(BaseViewSet):
+    SERVICE_URL = CHAT_SERVICE_URL
+    serializer_class = ChatRequestSerializer
+
+    def create(self, request, *args, **kwargs):
+        return self._request("POST", "ollama/", request=request, json=request.data, timeout=1010)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='search',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Para buscar en la conversación de ollama',
+                required=False,
+            ),
+        ],
+        summary="Obtiene las peticiones y las respuestas del usuario"
+    )
+    def list(self, request, *args, **kwargs):
+        return self._request("GET", "ollama/", request=request, timeout=12, params=request.query_params)

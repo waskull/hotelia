@@ -2,24 +2,38 @@ import httpx
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from llama.rag_llamacpp import add_document
+from llama.rag import add_document as ollama_add_document
+from llama.rag_gemini import add_document as gemini_add_document
 
 HOTELS_API = f"{settings.HOTELS_SERVICE_URL}hotels/"
 ROOMS_API = f"{settings.HOTELS_SERVICE_URL}rooms/"
 
+
 class Command(BaseCommand):
     help = "Ingesta documentos desde los microservicios de hoteles y habitaciones."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--engine",
+            type=str,
+            choices=["ollama", "llama", "gemini"],
+            default="llama",
+            help="Motor para generar embeddings (ollama, llama o Gemini).",
+        )
+
     def handle(self, *args, **kwargs):
-        self.stdout.write("🔄 Iniciando proceso de ingesta...")
+        self.stdout.write("Iniciando proceso de ingesta...")
+        engine = kwargs["engine"]
+        self.stdout.write(self.style.WARNING(f"Usando motor: {engine}"))
         total_docs = 0
         headers = {
             "Content-Type": "application/json",
             "X-Hotel-Gateway-Token": settings.HOTELS_GATEWAY_TOKEN
-        }   
+        }
         # Cliente httpx
         client = httpx.Client(timeout=10.0, headers=headers)
 
-        # === HOTELS ===
+        # Habitaciones
         try:
             self.stdout.write("Obteniendo datos de hoteles...")
             hotel_response = client.get(HOTELS_API)
@@ -40,7 +54,7 @@ class Command(BaseCommand):
                 text = (
                     f"Hotel: {name}. "
                     f"Descripción: {desc}. "
-                    f"Estrellas: Hotel de {stars} estrellas. "                  
+                    f"Estrellas: Hotel de {stars} estrellas. "
                     f"Servicios: {services}. "
                     f"Correo: {email}. "
                     f"Telefono: {phone}. "
@@ -49,18 +63,33 @@ class Command(BaseCommand):
                     f"Política de reservaciones: {reservation_policy}."
                 )
                 print(text)
-                add_document(
-                    doc_id=f"hotel_{id}",
-                    text=text,
-                    metadata={"source": "hotel", "id": id}
-                )
+
+                if engine == "ollama":
+                    ollama_add_document(
+                        doc_id=f"hotel_{id}",
+                        text=text,
+                        metadata={"source": "hotel", "id": id},
+                    )
+                elif engine == "gemini":
+                    gemini_add_document(
+                        doc_id=f"hotel_{id}",
+                        text=text,
+                        metadata={"source": "hotel", "id": id},
+                    )
+                else:
+                    add_document(
+                        doc_id=f"hotel_{id}",
+                        text=text,
+                        metadata={"source": "hotel", "id": id},
+                    )
                 total_docs += 1
 
-            self.stdout.write(f"{len(hotels)} hoteles ingresados correctamente.")
+            self.stdout.write(
+                f"{len(hotels)} hoteles ingresados correctamente.")
         except Exception as e:
             self.stderr.write(f"Error al obtener hoteles: {e}")
 
-        # === ROOMS ===
+        # Habitaciones
         try:
             self.stdout.write("Obteniendo datos de habitaciones...")
             rooms_response = client.get(ROOMS_API)
@@ -90,9 +119,11 @@ class Command(BaseCommand):
                 )
                 total_docs += 1
 
-            self.stdout.write(f"{len(rooms)} habitaciones ingresadas correctamente.")
+            self.stdout.write(
+                f"{len(rooms)} habitaciones ingresadas correctamente.")
         except Exception as e:
             self.stderr.write(f"Error al obtener habitaciones: {e}")
 
         client.close()
-        self.stdout.write(self.style.SUCCESS(f"Ingesta completada. Total documentos: {total_docs}"))
+        self.stdout.write(self.style.SUCCESS(
+            f"Ingesta completada. Total documentos: {total_docs}"))
