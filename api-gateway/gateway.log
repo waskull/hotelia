@@ -1861,3 +1861,166 @@ INFO 2025-11-10 21:46:56,243 autoreload 7640 5476 C:\Users\Zulgerlys\Workspace\h
 INFO 2025-11-10 21:46:57,169 autoreload 9624 724 Watching for file changes with StatReloader
 INFO 2025-11-10 21:48:24,818 autoreload 9624 724 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\views.py changed, reloading.
 INFO 2025-11-10 21:48:25,970 autoreload 4552 1792 Watching for file changes with StatReloader
+INFO 2025-11-10 22:52:14,629 autoreload 9004 7012 Watching for file changes with StatReloader
+INFO 2025-11-10 23:08:25,438 autoreload 7108 7240 Watching for file changes with StatReloader
+INFO 2025-11-10 23:09:03,596 views 7108 6284 POST http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:09:08,675 _client 7108 6284 HTTP Request: POST http://localhost:8005/api/gemini/ "HTTP/1.1 200 OK"
+INFO 2025-11-10 23:09:08,675 views 7108 6284 200 http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:12:45,047 views 7108 6284 POST http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:12:49,772 _client 7108 6284 HTTP Request: POST http://localhost:8005/api/gemini/ "HTTP/1.1 200 OK"
+INFO 2025-11-10 23:12:49,773 views 7108 6284 200 http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:13:37,791 views 7108 6284 POST http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:13:44,001 _client 7108 6284 HTTP Request: POST http://localhost:8005/api/gemini/ "HTTP/1.1 200 OK"
+INFO 2025-11-10 23:13:44,004 views 7108 6284 200 http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:13:59,653 views 7108 6284 POST http://localhost:8005/api/gemini/
+INFO 2025-11-10 23:14:07,837 _client 7108 6284 HTTP Request: POST http://localhost:8005/api/gemini/ "HTTP/1.1 200 OK"
+INFO 2025-11-10 23:14:07,838 views 7108 6284 200 http://localhost:8005/api/gemini/
+INFO 2025-11-11 13:41:37,226 autoreload 1600 6192 Watching for file changes with StatReloader
+INFO 2025-11-11 13:44:20,697 autoreload 1600 6192 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\core\settings.py changed, reloading.
+INFO 2025-11-11 13:44:21,777 autoreload 10288 9164 Watching for file changes with StatReloader
+INFO 2025-11-11 13:44:35,888 views 10288 6840 GET http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:44:39,974 _client 10288 6840 HTTP Request: GET http://localhost:8003/api/reservations/ "HTTP/1.1 403 Forbidden"
+INFO 2025-11-11 13:44:39,975 views 10288 6840 403 http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:44:50,733 views 10288 5064 GET http://localhost:8002/api/reviews/
+INFO 2025-11-11 13:44:52,778 _client 10288 5064 HTTP Request: GET http://localhost:8002/api/reviews/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 13:44:52,779 views 10288 5064 200 http://localhost:8002/api/reviews/
+INFO 2025-11-11 13:45:02,297 views 10288 10536 POST http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 13:45:04,320 _client 10288 10536 HTTP Request: POST http://localhost:8001/api/token/refresh/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 13:45:04,343 views 10288 10536 200 http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 13:45:24,504 views 10288 11168 GET http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:45:28,578 _client 10288 11168 HTTP Request: GET http://localhost:8003/api/reservations/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 13:45:28,579 views 10288 11168 200 http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:53:08,195 autoreload 10288 9164 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 13:53:09,246 autoreload 8376 2112 Watching for file changes with StatReloader
+INFO 2025-11-11 13:53:36,901 views 8376 524 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:53:40,937 _client 8376 524 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 403 Forbidden"
+INFO 2025-11-11 13:53:40,939 views 8376 524 403 http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:53:47,034 views 8376 7940 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 13:53:51,105 _client 8376 7940 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 400 Bad Request"
+INFO 2025-11-11 13:53:51,106 views 8376 7940 400 http://localhost:8003/api/reservations/
+INFO 2025-11-11 14:27:35,620 autoreload 8376 2112 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:27:36,601 autoreload 10072 6504 Watching for file changes with StatReloader
+INFO 2025-11-11 14:27:58,228 autoreload 10072 6504 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:27:59,033 autoreload 7720 8360 Watching for file changes with StatReloader
+INFO 2025-11-11 14:29:11,440 autoreload 7720 8360 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:29:12,250 autoreload 10932 2484 Watching for file changes with StatReloader
+INFO 2025-11-11 14:30:11,937 autoreload 10932 2484 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\core\settings.py changed, reloading.
+INFO 2025-11-11 14:30:12,942 autoreload 11084 10648 Watching for file changes with StatReloader
+INFO 2025-11-11 14:34:29,646 autoreload 4536 11016 Watching for file changes with StatReloader
+INFO 2025-11-11 14:36:17,809 autoreload 4536 11016 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:36:18,836 autoreload 11240 7316 Watching for file changes with StatReloader
+INFO 2025-11-11 14:40:11,427 autoreload 11240 7316 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:40:12,323 autoreload 10140 1824 Watching for file changes with StatReloader
+INFO 2025-11-11 14:41:04,251 autoreload 10140 1824 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:42:00,332 autoreload 1128 9312 Watching for file changes with StatReloader
+INFO 2025-11-11 14:44:29,121 autoreload 1128 9312 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:44:30,231 autoreload 1292 7952 Watching for file changes with StatReloader
+INFO 2025-11-11 14:44:51,259 autoreload 1292 7952 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:44:52,256 autoreload 6880 10044 Watching for file changes with StatReloader
+INFO 2025-11-11 14:49:08,180 autoreload 6880 10044 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 14:49:09,142 autoreload 492 216 Watching for file changes with StatReloader
+INFO 2025-11-11 15:09:35,746 autoreload 492 216 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:09:36,687 autoreload 10796 8388 Watching for file changes with StatReloader
+INFO 2025-11-11 15:10:26,068 autoreload 10796 8388 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:10:27,162 autoreload 252 3260 Watching for file changes with StatReloader
+INFO 2025-11-11 15:10:39,757 autoreload 252 3260 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:10:40,909 autoreload 10292 1748 Watching for file changes with StatReloader
+INFO 2025-11-11 15:10:54,147 autoreload 10292 1748 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:10:55,187 autoreload 9828 1400 Watching for file changes with StatReloader
+INFO 2025-11-11 15:12:27,740 autoreload 9828 1400 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:12:28,877 autoreload 2060 7700 Watching for file changes with StatReloader
+INFO 2025-11-11 15:12:48,783 autoreload 2060 7700 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:12:49,797 autoreload 9184 6972 Watching for file changes with StatReloader
+INFO 2025-11-11 15:14:20,446 autoreload 9184 6972 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:14:21,344 autoreload 1876 10376 Watching for file changes with StatReloader
+INFO 2025-11-11 15:26:53,050 autoreload 1876 10376 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:26:54,156 autoreload 10360 7868 Watching for file changes with StatReloader
+INFO 2025-11-11 15:29:37,694 autoreload 10360 7868 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:29:38,560 autoreload 9312 9204 Watching for file changes with StatReloader
+INFO 2025-11-11 15:30:30,505 autoreload 9312 9204 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:30:31,393 autoreload 5088 10404 Watching for file changes with StatReloader
+INFO 2025-11-11 15:30:36,868 autoreload 5088 10404 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:30:37,762 autoreload 1712 9308 Watching for file changes with StatReloader
+INFO 2025-11-11 15:30:51,949 autoreload 1712 9308 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:30:52,796 autoreload 10620 7284 Watching for file changes with StatReloader
+INFO 2025-11-11 15:31:36,811 autoreload 10620 7284 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 15:31:37,682 autoreload 10280 5664 Watching for file changes with StatReloader
+INFO 2025-11-11 15:33:56,160 views 10280 11224 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 15:34:00,264 _client 10280 11224 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 403 Forbidden"
+INFO 2025-11-11 15:34:00,265 views 10280 11224 403 http://localhost:8003/api/reservations/
+INFO 2025-11-11 15:34:11,885 views 10280 868 POST http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 15:34:13,923 _client 10280 868 HTTP Request: POST http://localhost:8001/api/token/refresh/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 15:34:13,924 views 10280 868 200 http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 15:34:26,751 views 10280 1580 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 15:34:38,117 _client 10280 1580 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 201 Created"
+INFO 2025-11-11 15:34:38,119 views 10280 1580 201 http://localhost:8003/api/reservations/
+INFO 2025-11-11 15:35:44,201 views 10280 5040 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 15:35:50,849 _client 10280 5040 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 400 Bad Request"
+INFO 2025-11-11 15:35:50,850 views 10280 5040 400 http://localhost:8003/api/reservations/
+INFO 2025-11-11 15:36:39,694 views 10280 6460 GET http://localhost:8003/api/reservations/extend/
+INFO 2025-11-11 15:36:43,744 _client 10280 6460 HTTP Request: GET http://localhost:8003/api/reservations/extend/ "HTTP/1.1 404 Not Found"
+INFO 2025-11-11 15:36:43,746 views 10280 6460 404 http://localhost:8003/api/reservations/extend/
+INFO 2025-11-11 15:37:45,563 views 10280 10376 PUT http://localhost:8003/api/reservations/23/
+INFO 2025-11-11 15:37:49,611 _client 10280 10376 HTTP Request: PUT http://localhost:8003/api/reservations/23/ "HTTP/1.1 400 Bad Request"
+INFO 2025-11-11 15:37:49,612 views 10280 10376 400 http://localhost:8003/api/reservations/23/
+INFO 2025-11-11 15:38:01,468 views 10280 8520 PUT http://localhost:8003/api/reservations/23/
+INFO 2025-11-11 15:38:05,510 _client 10280 8520 HTTP Request: PUT http://localhost:8003/api/reservations/23/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 15:38:05,511 views 10280 8520 200 http://localhost:8003/api/reservations/23/
+INFO 2025-11-11 15:38:28,840 views 10280 10736 POST http://localhost:8003/api/reservations/23/extend_reservation/
+INFO 2025-11-11 15:38:33,025 _client 10280 10736 HTTP Request: POST http://localhost:8003/api/reservations/23/extend_reservation/ "HTTP/1.1 500 Internal Server Error"
+INFO 2025-11-11 15:38:33,026 views 10280 10736 500 http://localhost:8003/api/reservations/23/extend_reservation/
+INFO 2025-11-11 15:39:38,746 views 10280 10904 POST http://localhost:8003/api/reservations/23/extend_reservation/
+INFO 2025-11-11 15:39:42,820 _client 10280 10904 HTTP Request: POST http://localhost:8003/api/reservations/23/extend_reservation/ "HTTP/1.1 400 Bad Request"
+INFO 2025-11-11 15:39:42,821 views 10280 10904 400 http://localhost:8003/api/reservations/23/extend_reservation/
+INFO 2025-11-11 15:39:48,552 views 10280 11080 POST http://localhost:8003/api/reservations/23/extend_reservation/
+INFO 2025-11-11 15:39:55,116 _client 10280 11080 HTTP Request: POST http://localhost:8003/api/reservations/23/extend_reservation/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 15:39:55,117 views 10280 11080 200 http://localhost:8003/api/reservations/23/extend_reservation/
+INFO 2025-11-11 15:42:30,946 autoreload 11040 7364 Watching for file changes with StatReloader
+INFO 2025-11-11 16:10:41,601 views 11040 9820 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 16:10:55,523 _client 11040 9820 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 201 Created"
+INFO 2025-11-11 16:10:55,524 views 11040 9820 201 http://localhost:8003/api/reservations/
+INFO 2025-11-11 16:13:28,746 autoreload 11040 7364 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 16:13:29,680 autoreload 10988 10076 Watching for file changes with StatReloader
+INFO 2025-11-11 16:13:40,633 autoreload 10988 10076 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 16:13:41,563 autoreload 4476 5356 Watching for file changes with StatReloader
+INFO 2025-11-11 16:13:45,402 autoreload 4476 5356 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 16:13:46,284 autoreload 3296 2720 Watching for file changes with StatReloader
+INFO 2025-11-11 16:14:51,547 autoreload 3296 2720 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 16:14:52,477 autoreload 6828 10268 Watching for file changes with StatReloader
+INFO 2025-11-11 16:15:00,291 autoreload 6828 10268 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 16:15:01,299 autoreload 10316 6024 Watching for file changes with StatReloader
+INFO 2025-11-11 16:16:37,282 views 10316 2136 POST http://localhost:8003/api/reservations/24/extend_reservation/
+INFO 2025-11-11 16:16:43,859 _client 10316 2136 HTTP Request: POST http://localhost:8003/api/reservations/24/extend_reservation/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 16:16:43,860 views 10316 2136 200 http://localhost:8003/api/reservations/24/extend_reservation/
+INFO 2025-11-11 16:59:40,268 views 10316 7720 GET http://localhost:8003/api/reservations/
+INFO 2025-11-11 16:59:44,348 _client 10316 7720 HTTP Request: GET http://localhost:8003/api/reservations/ "HTTP/1.1 403 Forbidden"
+INFO 2025-11-11 16:59:44,349 views 10316 7720 403 http://localhost:8003/api/reservations/
+INFO 2025-11-11 16:59:46,218 views 10316 9060 POST http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 16:59:48,254 _client 10316 9060 HTTP Request: POST http://localhost:8001/api/token/refresh/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 16:59:48,256 views 10316 9060 200 http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 17:01:13,273 views 10316 9784 GET http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:01:17,316 _client 10316 9784 HTTP Request: GET http://localhost:8003/api/reservations/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 17:01:17,318 views 10316 9784 200 http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:14:58,758 views 10316 2276 GET http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:15:02,825 _client 10316 2276 HTTP Request: GET http://localhost:8003/api/reservations/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 17:15:02,826 views 10316 2276 200 http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:26:04,361 autoreload 10316 6024 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\core\settings.py changed, reloading.
+INFO 2025-11-11 17:26:05,502 autoreload 3032 9828 Watching for file changes with StatReloader
+INFO 2025-11-11 17:28:27,564 autoreload 11240 9280 Watching for file changes with StatReloader
+INFO 2025-11-11 17:30:44,246 autoreload 6228 2900 Watching for file changes with StatReloader
+INFO 2025-11-11 17:33:08,217 views 6228 1600 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:33:12,288 _client 6228 1600 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 403 Forbidden"
+INFO 2025-11-11 17:33:12,289 views 6228 1600 403 http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:33:18,028 views 6228 11176 POST http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 17:33:20,045 _client 6228 11176 HTTP Request: POST http://localhost:8001/api/token/refresh/ "HTTP/1.1 200 OK"
+INFO 2025-11-11 17:33:20,046 views 6228 11176 200 http://localhost:8001/api/token/refresh/
+INFO 2025-11-11 17:33:34,174 views 6228 532 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:33:38,226 _client 6228 532 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 403 Forbidden"
+INFO 2025-11-11 17:33:38,226 views 6228 532 403 http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:34:23,547 views 6228 7940 POST http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:34:37,441 _client 6228 7940 HTTP Request: POST http://localhost:8003/api/reservations/ "HTTP/1.1 201 Created"
+INFO 2025-11-11 17:34:37,442 views 6228 7940 201 http://localhost:8003/api/reservations/
+INFO 2025-11-11 17:35:41,969 autoreload 6228 2900 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 17:35:42,901 autoreload 3852 3472 Watching for file changes with StatReloader
+INFO 2025-11-11 17:36:04,718 autoreload 3852 3472 C:\Users\Zulgerlys\Workspace\hotelia\api-gateway\gateway\serializers.py changed, reloading.
+INFO 2025-11-11 17:36:05,805 autoreload 8840 10848 Watching for file changes with StatReloader

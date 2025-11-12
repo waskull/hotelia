@@ -1,5 +1,6 @@
 from rest_framework import serializers
-
+from datetime import time, datetime
+from django.utils import timezone
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -108,25 +109,77 @@ class RoomResponseSerializer(RoomSerializer):
     id = serializers.IntegerField(required=False)
 
 
-
 class ReservationSerializer(serializers.Serializer):
     room_id = serializers.IntegerField()
     user_id = serializers.IntegerField(required=False)
-    start_date = serializers.DateField()
-    end_date = serializers.DateField()
+    start_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
+    end_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
     status = serializers.CharField()
+
 
 class CreateReservationSerializer(serializers.Serializer):
     room_id = serializers.IntegerField()
-    start_date = serializers.DateField()
+    start_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
+    end_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
     user_id = serializers.IntegerField(required=False, allow_null=True)
-    end_date = serializers.DateField()
+
+    def validate(self, data):
+        if data["start_date"] > data["end_date"]:
+            raise serializers.ValidationError(
+                "La fecha de salida debe ser posterior a la fecha entrada")
+        if data["end_date"] < timezone.now():
+            raise serializers.ValidationError(
+                "La fecha de salida debe ser posterior a la fecha actual")
+        if data["start_date"].date() < timezone.now().date():
+            raise serializers.ValidationError(
+                "La fecha de entrada debe ser posterior a la fecha actual")
+
+        min_start_time = time(11, 00)    # 10:00 AM (10:00 AM)
+        max_start_time = time(22, 15)
+        start_time = data["start_date"].time()
+
+        end_time = data["end_date"].time()
+        min_end_time = time(7, 45)
+        max_end_time = time(10, 15)  # 10:15 AM
+
+        # Comprobar si la hora está fuera del rango
+        if not (min_start_time <= start_time <= max_start_time):
+            raise serializers.ValidationError(
+                "La hora de entrada debe de estar entre las 11:00 AM y las 10:15 PM."
+            )
+
+        if not (min_end_time <= end_time <= max_end_time):
+            raise serializers.ValidationError(
+                "La hora de salida debe de estar entre las 7:45 AM y las 10:15 AM."
+            )
+        return data
+
 
 class UpdateReservationSerializer(CreateReservationSerializer):
     user_id = serializers.IntegerField(required=True, allow_null=False)
 
+
 class ExtendReservationSerializer(serializers.Serializer):
-    end_date = serializers.DateField()
+    end_date = serializers.DateTimeField(
+        input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
+
+    def validate_end_date(self, value: datetime):
+        date = value.date()
+        if date < timezone.now().date():
+            raise serializers.ValidationError(
+                "La nueva fecha de salida debe ser posterior a la fecha actual"
+            )
+        end_time = value.time()
+        min_end_time = time(7, 45)
+        max_end_time = time(10, 15)  # 10:15 AM
+
+        if not (min_end_time <= end_time <= max_end_time):
+            raise serializers.ValidationError(
+                "La hora de salida debe de estar entre las 7:45 AM y las 10:15 AM."
+            )
+
+        return value
+
 
 class PaymentSerializer(serializers.Serializer):
     reservation = serializers.IntegerField()
@@ -135,11 +188,18 @@ class PaymentSerializer(serializers.Serializer):
     ref_code = serializers.CharField()
     payment_date = serializers.DateField()
 
+
 class ChatResponseSerializer(serializers.Serializer):
-    user_id = serializers.CharField(help_text="ID del usuario que hizo la consulta.")
-    query = serializers.CharField(help_text="Pregunta original enviada por el usuario.")
-    response = serializers.CharField(help_text="Respuesta generada por el modelo LLaMA u Ollama.")
+    user_id = serializers.CharField(
+        help_text="ID del usuario que hizo la consulta.")
+    query = serializers.CharField(
+        help_text="Pregunta original enviada por el usuario.")
+    response = serializers.CharField(
+        help_text="Respuesta generada por el modelo LLaMA u Ollama.")
+
 
 class ChatRequestSerializer(serializers.Serializer):
-    query = serializers.CharField(required=True, help_text="Texto o pregunta del usuario para el asistente de reservas.")
-    user_id = serializers.CharField(required=False, help_text="Identificador opcional del usuario. Se usa para mantener el historial contextual en ChromaDB.")
+    query = serializers.CharField(
+        required=True, help_text="Texto o pregunta del usuario para el asistente de reservas.")
+    user_id = serializers.CharField(
+        required=False, help_text="Identificador opcional del usuario. Se usa para mantener el historial contextual en ChromaDB.")
