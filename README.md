@@ -9,11 +9,11 @@ Visita la documentación en: 👉 [Hotelia Docs](https://hotelia.onrender.com/ap
 
 ---
 
-## 🚀 Características principales de Hotelia
+## 🏨 Características principales de Hotelia
 
-- 🔍 **Autenticación JWT** gracias a SimpleJWT.
-- 🧠 **Sistema de reserva** solo registrate y reserva tu habitación.
-- ⚡ **Notificaciones por correo** cuando tu reserva es realizada recibiras una notificación por correo electronico.
+- 🔑 **Autenticación JWT** gracias a SimpleJWT.
+- 🧿 **Sistema de reserva** solo registrate y reserva tu habitación.
+- 📩 **Notificaciones por correo** cuando tu reserva es realizada recibiras una notificación por correo electronico.
 - 🧾 **API RESTful** con Django REST Framework.
 - 💾 **Persistencia** en SQLite (metadatos).
 
