@@ -116,7 +116,7 @@ SIMPLE_JWT = {
 
 LANGUAGE_CODE = 'es-MX'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Caracas'
 
 USE_I18N = True
 
