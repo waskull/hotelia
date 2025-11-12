@@ -1,4 +1,4 @@
-# Hotelia — Plataforma de Reserva de habitaciones.
+# Hotelia — Plataforma de Reserva de Habitaciones.
 
 **Hotelia** es una plataforma modular basada en **microservicios** que gestiona reservas de habitaciones en hoteles.
 
