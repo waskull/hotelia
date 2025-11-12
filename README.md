@@ -9,13 +9,25 @@ Visita la documentación en: 👉 [Hotelia Docs](https://hotelia.onrender.com/ap
 
 ---
 
+## 🚀 Características principales de Hotelia
+
+- 🔍 **Autenticación JWT** gracias a SimpleJWT.
+- 🧠 **Sistema de reserva** solo registrate y reserva tu habitación.
+- ⚡ **Notificaciones por correo** cuando tu reserva es realizada recibiras una notificación por correo electronico.
+- 🧾 **API RESTful** con Django REST Framework.
+- 💾 **Persistencia** en SQLite (metadatos).
+
+---
+
+---
+
 ## 🚀 Características principales del Chatbot
 
 - 🔍 **Búsqueda semántica** con embeddings.
 - 🧠 **Generación aumentada** con contexto recuperado desde ChromaDB.
 - ⚡ **Ejecución local** del modelo LLM (ej. Gemma 3 1B, Llama 3.2 1B, Gemma 3 4B, etc.) mediante `llama.cpp` u `Ollama`.
 - 🧾 **API RESTful** con Django REST Framework.
-- 💾 **Persistencia** en SQLite (para metadatos) y ChromaDB (para vectores).
+- 💾 **Persistencia** con ChromaDB (vectores).
 - 🧱 Arquitectura modular y extensible (puedes cambiar el modelo o el vector store fácilmente).
 
 ---
