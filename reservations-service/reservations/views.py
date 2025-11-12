@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.conf import settings
 from datetime import datetime
+from dateutil import parser
 import httpx
 # from asgiref.sync import async_to_sync
 from .models import Reservation, Payment, Status, PaymentMethod
@@ -25,13 +26,13 @@ def send_email(user_id, request, room_id, start_date, end_date, status, fullname
                 'Authorization': request.headers.get('Authorization')}).json()
             fullname = f"{user['first_name']} {user['last_name']}"
             email = user['email']
-        msg = f"Hola {fullname}, tu reserva para la habitación #{room_id} del {start_date} al {end_date} 11:00am"
+        msg = f"Hola {fullname}, tu reserva para la habitación #{room_id} del {format_date(start_date)} al {format_date(end_date)}"
         subject = "Reserva realizada"
         if status == Status.OCUPPIED:
             msg = f"{msg} ha sido aprobada y esta esperando por ti."
             subject = "Reserva Confirmada"
         else:
-            msg = f"{msg} ha sido realizada y esta en espera por confirmación de la administración."
+            msg = f"{msg} ha sido realizada y una vez confirmado el pago se le notificara con un correo."
         json = {
             "subject": subject,
             "body": msg,
@@ -44,6 +45,10 @@ def send_email(user_id, request, room_id, start_date, end_date, status, fullname
             print(response.json())
     except httpx.RequestError as e:
         print("No se pudo enviar el correo")
+
+
+def format_date(timedatestamp: datetime):
+    return parser.isoparse(str(timedatestamp)).strftime("%d/%m/%Y %I:%M %p")
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -94,7 +99,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
             ).values_list("room_id", flat=True)
 
             # Excluir esas habitaciones del queryset principal
-            print("ADENTRO BV")
             queryset = queryset.exclude(room_id__in=reserved_rooms)
         if status:
             queryset = queryset.filter(status__icontains=status)
@@ -165,7 +169,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request, *args, **kwargs):
-        print("llegando")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_id = request.data.get("user_id")
@@ -374,7 +377,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         try:
             new_end_date = datetime.fromisoformat(new_end_date_str)
-            new_end_date = new_end_date.date()
+            new_end_date = new_end_date
         except ValueError:
             return Response({"error": "Formato de fecha de fin inválido. Use formato YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -404,7 +407,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             status__in=[Status.PENDING, Status.CONFIRMED,
                         Status.PREPARING, Status.OCUPPIED]
         )
-        print("432")
+
         if overlapping.exists():
             return Response(
                 {"error": "No es posible extender la reserva. La habitación ya ha sido reservada por otra persona en el nuevo rango de fechas."},
@@ -413,12 +416,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         # 4. Recálculo del precio total
         try:
-            print("res")
             response = httpx.get(
                 f'{HOTELS_SERVICE_URL}rooms/{room_id}/', headers={'Authorization': request.headers.get('Authorization')})
             response.raise_for_status()
             result = response.json()
-            print("after")
             cost_night = float(result['price_per_night'])
         except httpx.RequestError:
             return Response({'error': 'Error al contactar el servicio de hoteles para obtener el precio.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -432,5 +433,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation.total_price = new_total_price
         reservation.save()
 
-        serializer = self.get_serializer(reservation)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        formatted_date = format_date(new_end_date)
+
+        # serializer = self.get_serializer(reservation)
+        return Response({"message": "Reserva actualizada, la nueva fecha de salida es: " + formatted_date}, status=status.HTTP_200_OK)

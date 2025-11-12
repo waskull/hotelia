@@ -1,6 +1,7 @@
 from datetime import datetime
 from django.contrib.auth import password_validation, authenticate
 from django.contrib.auth.models import Group, Permission
+from django.utils import timezone
 # from django.contrib.auth import get_user_model
 
 # Django REST Framework
@@ -18,6 +19,7 @@ class ReservationCountSerializer(serializers.Serializer):
     room_id = serializers.IntegerField(read_only=True)
 
 class ExtendReservationSerializer(serializers.ModelSerializer):
+    end_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
     class Meta:
         model = Reservation
         fields = ['end_date', 'id']
@@ -35,6 +37,8 @@ class ReservationCancelSerializer(serializers.ModelSerializer):
 
 class ReservationSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(required=False, allow_null=True)
+    start_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
+    end_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
 
     class Meta:
         model = Reservation
@@ -44,13 +48,13 @@ class ReservationSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
-        if data["end_date"] < data["start_date"]:
+        if data["start_date"] > data["end_date"]:
             raise serializers.ValidationError(
                 "La fecha de salida debe ser posterior a la fecha entrada")
-        if data["end_date"] < datetime.now().date():
+        if data["end_date"] < timezone.now():
             raise serializers.ValidationError(
                 "La fecha de salida debe ser posterior a la fecha actual")
-        if data["start_date"] < datetime.now().date():
+        if data["start_date"].date() < timezone.now().date():
             raise serializers.ValidationError(
                 "La fecha de entrada debe ser posterior a la fecha actual")
 
@@ -61,6 +65,9 @@ class ReservationSerializer(serializers.ModelSerializer):
 
 
 class UpdateReservationSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
+    end_date = serializers.DateTimeField(input_formats=['%d/%m/%Y %I:%M %p', 'iso-8601'])
+    
     class Meta:
         model = Reservation
         fields = ['user_id', 'start_date', 'end_date', 'room_id', 'id']
@@ -72,10 +79,10 @@ class UpdateReservationSerializer(serializers.ModelSerializer):
         if data["end_date"] < data["start_date"]:
             raise serializers.ValidationError(
                 "La fecha de salida debe ser posterior a la fecha entrada")
-        if data["end_date"] < datetime.now().date():
+        if data["end_date"] < timezone.now():
             raise serializers.ValidationError(
                 "La fecha de salida debe ser posterior a la fecha actual")
-        if data["start_date"] < datetime.now().date():
+        if data["start_date"].date() < timezone.now().date():
             raise serializers.ValidationError(
                 "La fecha de entrada debe ser posterior a la fecha actual")
 

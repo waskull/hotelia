@@ -51,8 +51,8 @@ class Reservation(BaseModel):
     room_id = models.IntegerField(help_text="ID de la habitación reservada.")
     user_id = models.IntegerField(
         help_text="ID del usuario que realiza la reserva.")
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
     status = models.CharField(
         max_length=20, default=Status.PENDING, choices=Status.choices)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
