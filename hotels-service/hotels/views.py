@@ -43,7 +43,7 @@ class HotelViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         Hotel.objects.create(**serializer.validated_data)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["GET"])
     def top(self, request):
         headers = getHeaders(request)
         headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
@@ -70,10 +70,10 @@ class HotelViewSet(viewsets.ModelViewSet):
 
             hotel_counts = {}
             for room in rooms:
-                # Multiply the room's frequency by the number of times it appeared in the external data
+                
                 count = room_id_counts.get(room.id, 0)
 
-                # Accumulate the total count for the hotel
+                
                 hotel_id = room.hotel.id
                 hotel_counts[hotel_id] = hotel_counts.get(
                     hotel_id, {'hotel': room.hotel, 'count': 0})
