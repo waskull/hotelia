@@ -308,6 +308,10 @@ class RoomView(BaseViewSet):
     SERVICE_URL = HOTELS_SERVICE_URL
     serializer_class = RoomSerializer
 
+    def get_serializer(self):
+        if self.action == "top":
+            return None
+        return self.serializer_class
     def list(self, request, *args, **kwargs):
         return self._request("GET", "rooms/", request=request, params=request.query_params)
 
@@ -322,6 +326,10 @@ class RoomView(BaseViewSet):
 
     def destroy(self, request, pk=None, *args, **kwargs):
         return self._request("DELETE", f"rooms/{pk}/", request=request)
+    
+    @action(detail=False, methods=["POST"])
+    def top(self, request):
+        return self._request("GET", "rooms/top/", request=request, params=request.query_params)
 
 
 class ReservationView(BaseViewSet):
