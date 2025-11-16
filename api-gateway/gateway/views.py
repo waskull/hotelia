@@ -341,6 +341,10 @@ class ReservationView(BaseViewSet):
     def user(self, request):
         return self._request("GET", f"reservations/user/", request=request)
 
+    @action(detail=False, methods=["GET"])
+    def top(self, request):
+        return self._request("GET", f"reservations/top/", request=request)
+
     def partial_update(self, request, pk=None, *args, **kwargs):
         return self._request("PATCH", f"reservations/{pk}/", request=request, json=request.data)
 
