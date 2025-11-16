@@ -79,7 +79,7 @@ class HotelViewSet(viewsets.ModelViewSet):
                     hotel_id, {'hotel': room.hotel, 'count': 0})
                 hotel_counts[hotel_id]['count'] += count
 
-            # --- 4. Format the Output ---
+            
             top_hotels_list = []
             for data in hotel_counts.values():
                 hotel = data['hotel']
@@ -134,3 +134,29 @@ class RoomViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     def perform_create(self, serializer) -> None:
         Room.objects.create(**serializer.validated_data)
+
+    @action(detail=False, methods=["GET"])
+    def top(self, request):
+        headers = getHeaders(request)
+        headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
+        url = f'{RESERVATIONS_SERVICE_URL}reservations/top/'
+        try:
+            response = httpx.get(
+                url, timeout=15, headers=headers, params=request.query_params)
+            top_rooms = response.json()
+            room_ids = [room["room_id"] for room in top_rooms]
+            room_id_counts = {room["room_id"]: room["count"] for room in top_rooms}
+            rooms = Room.objects.filter(id__in=room_ids)
+            top_rooms = []
+            for room in rooms:
+                top_rooms.append({
+                    "id": room.id,
+                    "hotel": room.hotel.name,
+                    "room_number": room.room_number,
+                    "count": room_id_counts.get(room.id, 0)
+                })
+            top_rooms.sort(key=lambda x: x['count'], reverse=True)
+            return Response(top_rooms, status=response.status_code)
+        except httpx.RequestError as e:
+            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
