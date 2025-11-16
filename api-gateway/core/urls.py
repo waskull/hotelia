@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from gateway.views import (
-    AuthLoginView, UserRefreshTokenView,UserView,AuthProfileView,AuthRegisterView,HotelTopView,
+    AuthLoginView, UserRefreshTokenView,UserView,AuthProfileView,AuthRegisterView,
     HotelView, ReservationView,ReviewView, RoomView, PaymentView, ChatBotView, GeminiChatBotView, OllamaChatBotView
 )
 
@@ -15,7 +15,6 @@ router.register(r'auth/refresh', UserRefreshTokenView, basename="user-refresh-to
 router.register(r'auth', AuthProfileView, basename="user-profile")
 router.register(r'users', UserView, basename="users")
 router.register(r'hotels', HotelView, basename="hotels")
-router.register(r'hotels/top', HotelTopView, basename="hotels-top")
 router.register(r'reviews', ReviewView, basename="reviews")
 router.register(r'rooms', RoomView, basename="rooms")
 router.register(r'reservations', ReservationView, basename="reservation")

@@ -6,7 +6,7 @@ from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.parsers import FileUploadParser, MultiPartParser
-#from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
@@ -215,6 +215,23 @@ class HotelView(BaseViewSet):
     parser_classes = [MultiPartParser, FileUploadParser]
     serializer_class = HotelSerializer
 
+    def get_serializer(self):
+        if self.action == "top":
+            return None
+        return self.serializer_class
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='city',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Introduce una ciudad para filtrar los hoteles',
+                required=False,
+            ),
+        ],
+        summary="Obtiene la lista de hoteles"
+    )
     def list(self, request, *args, **kwargs):
         return self._request("GET", "hotels/", request=request, params=request.query_params)
 
@@ -246,22 +263,21 @@ class HotelView(BaseViewSet):
     def destroy(self, request, pk=None, *args, **kwargs):
         return self._request("DELETE", f"hotels/{pk}/", request=request)
 
-
-@extend_schema(
-    parameters=[
-        OpenApiParameter(
-            name='global',
-            type=OpenApiTypes.BOOL,
-            location=OpenApiParameter.QUERY,
-            description='Para para traer el top global de hoteles',
-            required=False,
-        ),
-    ]
-)
-class HotelTopView(BaseViewSet):
-    SERVICE_URL = HOTELS_SERVICE_URL
-
-    def list(self, request, *args, **kwargs):
+    @extend_schema(            
+        auth=[],
+        parameters=[
+            OpenApiParameter(
+                name='global',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='true para traer el top global de hoteles, false para solo el del usuario autenticado.',
+                required=False,
+            ),
+        ],
+        summary="Obtiene el top de hoteles"
+    )
+    @action(detail=False, methods=["POST"])
+    def top(self, request):
         return self._request("GET", "hotels/top/", request=request, params=request.query_params)
 
 
@@ -341,7 +357,7 @@ class ReservationView(BaseViewSet):
     def user(self, request):
         return self._request("GET", f"reservations/user/", request=request)
 
-    @action(detail=False, methods=["GET"])
+    @action(detail=False, methods=["POST"])
     def top(self, request):
         return self._request("GET", f"reservations/top/", request=request)
 
