@@ -4,8 +4,8 @@
 
 Cuenta además con un **chatbot inteligente (RAG)** integrado en el microservicio `chat-service`, el cual utiliza **ChromaDB** para recuperación de conocimiento y soporta modelos locales y externos mediante **Ollama**, **llama.cpp** y **Gemini**.
 
-Visita la api demo en: 👉 [Hotelia](https://hotelia-gateway.up.railway.app/api/)
-Visita la documentación en: 👉 [Hotelia Docs](https://hotelia-gateway.up.railway.app/api/docs/)
+Visita la api demo en: 👉 [Hotelia](https://hotelia-gateway.up.railway.app/api/) - [Mirror](https://hotelia.onrender.com/api/)
+Visita la documentación en: 👉 [Hotelia Docs](https://hotelia-gateway.up.railway.app/api/docs/) - [Hotelia Docs Mirror](https://hotelia.onrender.com/api/docs/)
 
 ---
 
