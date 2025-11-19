@@ -122,7 +122,7 @@ def search_user_history_gemini(user_id: str, search: str, n_results: int = 5):
     return history
 
 
-def generate_answer_gemini(query: str, context: str, temperature: float = 0.8, thinking_budget: int = 0):
+def generate_answer_gemini(query: str, context: str, temperature: float = 0.8):
     prompt = (
         f"{SYSTEM_PROMPT}\n\n"
         f"=== CONTEXT ===\n{context}\n\n"
@@ -161,7 +161,7 @@ def generate_answer_gemini(query: str, context: str, temperature: float = 0.8, t
         return ERROR_MESSAGE
 
 
-def handle_chat_query_gemini(query: str, user_id: str = "anonimo"):
+def handle_chat_query_gemini(query: str, user_id: str):
     docs = query_documents(query)
     context = "\n".join(docs) if docs else "Sin contexto de documentos."
     user_history = search_user_history_gemini(user_id=user_id, search=query)
@@ -181,7 +181,7 @@ def handle_chat_query_gemini(query: str, user_id: str = "anonimo"):
         print("Respuesta:", answer)
         if answer != ERROR_MESSAGE:
             pass
-            #store_user_interaction(user_id, query, answer)
+            store_user_interaction(user_id, query, answer)
         return answer
     except Exception as e:
         print(e)
