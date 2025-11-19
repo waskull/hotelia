@@ -220,11 +220,9 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 return Response({"error": "La habitación no existe."}, status=status.HTTP_404_NOT_FOUND)
             return Response({"error": f"Error en la petición: {exc.response.status_code}"})
 
-        days = int((end_date - start_date).days)
+        days = int((end_date.date() - start_date.date()).days)
         total: float = days * float(cost_night)
         serializer.validated_data["total_price"] = total
-        print(serializer.validated_data)
-
         overlapping = Reservation.objects.filter(
             room_id=room_id,
             start_date__lt=end_date,
@@ -320,7 +318,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             except httpx.HTTPStatusError as exc:
                 return Response({"error": f"La habitación con ID {room_id} no existe o no está disponible."}, status=status.HTTP_404_NOT_FOUND)
 
-            days = int((end_date - start_date).days)
+            days = int((end_date.date() - start_date.date()).days)
             total: float = days * float(cost_night)
             serializer.validated_data["total_price"] = total
 
@@ -368,6 +366,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def extend_reservation(self, request, pk=None):
         reservation = self.get_object()
+        print(reservation.start_date, reservation.end_date)
         seri = ExtendReservationSerializer(data=request.data)
         seri.is_valid(raise_exception=True)
         end = Reservation.objects.get(pk=pk).end_date
@@ -393,7 +392,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 {"error": "La nueva fecha de fin debe ser estrictamente posterior a la fecha de fin actual."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         current_start_date = reservation.start_date
         room_id = reservation.room_id
 
@@ -425,15 +423,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Error al contactar el servicio de hoteles para obtener el precio.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except httpx.HTTPStatusError:
             return Response({"error": "No se pudo obtener el precio de la habitación."}, status=status.HTTP_404_NOT_FOUND)
-
-        days = int((new_end_date - current_start_date).days)
+        days = int((new_end_date.date() - current_start_date.date()).days)
         new_total_price = days * cost_night
-
+        print(days)
         reservation.end_date = new_end_date
         reservation.total_price = new_total_price
         reservation.save()
-
         formatted_date = format_date(new_end_date)
-
-        # serializer = self.get_serializer(reservation)
-        return Response({"message": "Reserva actualizada, la nueva fecha de salida es: " + formatted_date}, status=status.HTTP_200_OK)
+        return Response({"message": f"Reserva actualizada, la nueva fecha de salida es: {formatted_date}, y el total a pagar es: {new_total_price}"}, status=status.HTTP_200_OK)
