@@ -201,5 +201,3 @@ class ChatResponseSerializer(serializers.Serializer):
 class ChatRequestSerializer(serializers.Serializer):
     query = serializers.CharField(
         required=True, help_text="Texto o pregunta del usuario para el asistente de reservas.")
-    user_id = serializers.CharField(
-        required=False, help_text="Identificador opcional del usuario. Se usa para mantener el historial contextual en ChromaDB.")
