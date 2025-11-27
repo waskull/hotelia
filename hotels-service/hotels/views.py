@@ -45,13 +45,18 @@ class HotelViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["GET"])
     def top(self, request):
-        headers = getHeaders(request)
+        headers = {}
+        if request.headers.get('Authorization') is not None:
+            headers['Authorization'] = request.headers.get('Authorization')
         headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         url = f'{RESERVATIONS_SERVICE_URL}reservations/top_hotels/'
         try:
             response = httpx.get(
                 url, timeout=15, headers=headers, params=request.query_params)
             data = response.json()
+            print(data)
+            if isinstance(data, dict):
+                return Response(data.get("detail"), status=status.HTTP_401_UNAUTHORIZED)
             room_ids = []
 
             for item in data:
@@ -137,13 +142,17 @@ class RoomViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["GET"])
     def top_rooms(self, request):
-        headers = getHeaders(request)
+        headers = {}
+        if request.headers.get('Authorization') is not None:
+            headers['Authorization'] = request.headers.get('Authorization')
         headers["X-Reservation-Gateway-Token"] = settings.RESERVATION_TOKEN
         url = f'{RESERVATIONS_SERVICE_URL}reservations/top/'
         try:
             response = httpx.get(
-                url, timeout=15, headers=headers, params=request.query_params)
+                url, timeout=15, headers=headers, params=request.query_params if request.query_params else {})
             top_rooms = response.json()
+            if isinstance(top_rooms, dict) and top_rooms.get("detail"):
+                return Response(top_rooms.get("detail"), status=status.HTTP_401_UNAUTHORIZED)
             room_ids = [room["room_id"] for room in top_rooms]
             room_id_counts = {room["room_id"]: room["count"] for room in top_rooms}
             rooms = Room.objects.filter(id__in=room_ids)

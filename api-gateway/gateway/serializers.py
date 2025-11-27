@@ -105,6 +105,13 @@ class RoomSerializer(serializers.Serializer):
     hotel = serializers.IntegerField()
     hotel_name = serializers.CharField(required=False)
 
+class RoomCreateSerializer(serializers.Serializer):
+    capacity = serializers.IntegerField()
+    room_type = serializers.CharField()
+    room_number = serializers.IntegerField()
+    price_per_night = serializers.DecimalField(max_digits=10, decimal_places=2)
+    hotel = serializers.IntegerField()
+
 
 class RoomResponseSerializer(RoomSerializer):
     status = serializers.CharField()

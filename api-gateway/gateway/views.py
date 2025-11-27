@@ -26,7 +26,7 @@ from .serializers import (
     UpdateReservationSerializer,
     ExtendReservationSerializer,
     RoomSerializer,
-    RoomResponseSerializer,
+    RoomCreateSerializer,
     ReviewSerializer,
     PaymentSerializer,
     ChatRequestSerializer,
@@ -288,10 +288,10 @@ class HotelView(BaseViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='global',
+                name='me',
                 type=OpenApiTypes.BOOL,
                 location=OpenApiParameter.QUERY,
-                description='true para traer el top global de hoteles, false para solo el del usuario autenticado.',
+                description='true para traer el top de mis hoteles, false para el global.',
                 required=False,
             ),
         ],
@@ -334,11 +334,13 @@ class RoomView(BaseViewSet):
     SERVICE_URL = HOTELS_SERVICE_URL
     serializer_class = RoomSerializer
 
-    def get_serializer(self):
+    def get_serializer_class(self):
         if self.action == "top_rooms":
             return None
+        if self.action == "create" or self.action == "update" or self.action == "partial_update":
+            return RoomCreateSerializer
         return self.serializer_class
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -354,7 +356,6 @@ class RoomView(BaseViewSet):
     @action(detail=False, methods=["POST"])
     def top_rooms(self, request):
         return self._request("GET", "rooms/top_rooms/", request=request, params=request.query_params)
-
 
     @extend_schema(summary="Obtiene la lista de habitaciones")
     def list(self, request, *args, **kwargs):

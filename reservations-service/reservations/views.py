@@ -107,13 +107,14 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def top(self, request):
         try:
-            user_id = request.user.id
-            global_top = self.request.query_params.get("global")
-            if global_top == "true":
-                top_popular_rooms = Reservation.objects.all().values(
+            is_authenticated = request.user.is_authenticated
+            global_top = request.query_params.get("global", "false")
+            if global_top == "true" or not is_authenticated:
+                top_popular_rooms = Reservation.objects.filter(status__in=[Status.COMPLETED, Status.PREPARING, Status.OCUPPIED, Status.CONFIRMED]).values(
                     'room_id').annotate(count=Count('room_id')).order_by('-count')[:5]
             else:
-                top_popular_rooms = Reservation.objects.filter(user_id=user_id).values(
+                user_id = request.user.id
+                top_popular_rooms = Reservation.objects.filter(user_id=user_id, status__in=[Status.COMPLETED, Status.PREPARING, Status.OCUPPIED, Status.CONFIRMED]).values(
                     'room_id').annotate(count=Count('room_id')).order_by('-count')[:5]
             serializer = ReservationCountSerializer(
                 top_popular_rooms, many=True)
@@ -125,21 +126,21 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def top_hotels(self, request):
+        is_authenticated = request.user.is_authenticated
         try:
-            me = request.query_params.get("me")
+            me = request.query_params.get("me", "false")
             rows = int(self.request.query_params.get("rows") or 5)
             if rows < 0:
                 rows = 5
             if rows > 10:
                 rows = 10
             top_popular_rooms = []
-            if me == "true":
-                print("user: ", request.user.id)
-                user_id = request.user.id
-                top_popular_rooms = Reservation.objects.filter(user_id=user_id).values(
+            if me == "false" or not is_authenticated:
+                top_popular_rooms = Reservation.objects.filter(status__in=[Status.COMPLETED, Status.PREPARING, Status.OCUPPIED, Status.CONFIRMED]).values(
                     'room_id').annotate(count=Count('room_id')).order_by('-count')[:rows]
             else:
-                top_popular_rooms = Reservation.objects.all().values(
+                user_id = request.user.id
+                top_popular_rooms = Reservation.objects.filter(user_id=user_id, status__in=[Status.COMPLETED, Status.PREPARING, Status.OCUPPIED, Status.CONFIRMED]).values(
                     'room_id').annotate(count=Count('room_id')).order_by('-count')[:rows]
             serializer = ReservationCountSerializer(
                 top_popular_rooms, many=True)
