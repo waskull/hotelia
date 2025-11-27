@@ -8,7 +8,7 @@ __pycache__/
 
 static/
 
-*.rar
+chroma_store.rar
 
 # Distribution / packaging
 .Python
