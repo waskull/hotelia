@@ -76,7 +76,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
 
 class ReservationViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
 
@@ -86,15 +86,15 @@ class ReservationViewSet(viewsets.ModelViewSet):
         start_date = self.request.query_params.get("start_date")
         end_date = self.request.query_params.get("end_date")
         status = self.request.query_params.get("status")
+        user_id = self.request.user.id
+        #is_authenticated = self.request.user.is_authenticated
+        is_cliente = "cliente" in self.request.user.groups
         if city:
             queryset = queryset.filter(city__icontains=city)
 
         if start_date and end_date:
-            # Buscar habitaciones que ya tienen reservas en ese rango
             reserved_rooms = Reservation.objects.filter(
-                # La nueva fecha de fin debe ser posterior a la fecha de inicio de la reserva existente.
                 start_date__lt=end_date,
-                # La nueva fecha de inicio debe ser anterior a la fecha de fin de la reserva existente.
                 end_date__gt=start_date,
             ).values_list("room_id", flat=True)
 
@@ -102,6 +102,9 @@ class ReservationViewSet(viewsets.ModelViewSet):
             queryset = queryset.exclude(room_id__in=reserved_rooms)
         if status:
             queryset = queryset.filter(status__icontains=status)
+
+        if is_cliente:
+            queryset = queryset.filter(user_id=user_id).order_by('-created_at')
         return queryset
 
     @action(detail=False, methods=["get"])
