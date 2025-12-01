@@ -483,7 +483,7 @@ class ChatBotView(BaseViewSet):
         # ],
         summary="Obtiene las peticiones y las respuestas del usuario con llama.cpp"
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["GET"])
     def history(self, request):
         return self._request("GET", "llamacpp/", request=request, timeout=12, params=request.query_params)
 
