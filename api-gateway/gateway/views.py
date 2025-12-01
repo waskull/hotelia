@@ -65,31 +65,12 @@ def get_auth_header_from_request(request):
     auth = request.headers.get("Authorization")
     return {"Authorization": auth} if auth else {}
 
-
-def _build_url(base: str, path: str) -> str:
-    if not base.endswith("/") and not path.startswith("/"):
-        return f"{base}/{path}"
-    return f"{base}{path}"
-
-
-def _safe_parse_json(response: httpx.Response):
-    try:
-        return response.json()
-    except JSONDecodeError:
-        return {"raw": response.text}
-
-
 http_client = httpx.Client(
     timeout=settings.HTTP_TIMEOUT if hasattr(settings, "HTTP_TIMEOUT") else 15,
     limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
 )
 
 
-@extend_schema(
-    auth=[],
-    #    auth=[] significa "ningún esquema de seguridad requerido".
-    methods=['GET'],
-)
 class BaseViewSet(ViewSet):
     # Base reutilizable para todos los microservicios del Gateway. Usa sesión httpx global con keepalive y logging.
     SERVICE_URL = None
@@ -297,7 +278,7 @@ class HotelView(BaseViewSet):
         ],
         summary="Obtiene el top de hoteles"
     )
-    @action(detail=False, methods=["POST"])
+    @action(detail=False, methods=["GET"])
     def top(self, request):
         return self._request("GET", "hotels/top/", request=request, params=request.query_params)
 
@@ -353,7 +334,7 @@ class RoomView(BaseViewSet):
         ],
         summary="Obtiene el top de habitaciones"
     )
-    @action(detail=False, methods=["POST"])
+    @action(detail=False, methods=["GET"])
     def top_rooms(self, request):
         return self._request("GET", "rooms/top_rooms/", request=request, params=request.query_params)
 
@@ -420,14 +401,10 @@ class ReservationView(BaseViewSet):
         return self._request("DELETE", f"reservations/{pk}/", request=request)
 
     @extend_schema(summary="Obtiene la lista de reservas del usuario logeado")
-    @action(detail=False, methods=["POST"])
+    @action(detail=False, methods=["GET"])
     def user(self, request):
         return self._request("GET", f"reservations/user/", request=request)
-
-    # @action(detail=False, methods=["POST"])
-    # def top(self, request):
-    #     return self._request("GET", f"reservations/top/", request=request)
-
+    
     @extend_schema(summary="Modifica el estado de la reservación")
     def partial_update(self, request, pk=None, *args, **kwargs):
         return self._request("PATCH", f"reservations/{pk}/", request=request, json=request.data)
@@ -532,7 +509,7 @@ class GeminiChatBotView(BaseViewSet):
         # ],
         summary="Obtiene las peticiones y las respuestas del usuario"
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["GET"])
     def history(self, request):
         return self._request("GET", "gemini/", request=request, timeout=12, params=request.query_params)
 
@@ -570,6 +547,6 @@ class OllamaChatBotView(BaseViewSet):
         # ],
         summary="Obtiene las peticiones y las respuestas del usuario"
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["GET"])
     def history(self, request):
         return self._request("GET", "ollama/", request=request, timeout=12, params=request.query_params)
