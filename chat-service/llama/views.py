@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from .authentication import UserAuthentication
 from .rag import handle_chat_query, get_user_history, search_user_history
 from .serializers import ChatRequestSerializer, ChatResponseSerializer, UserHistoryResponseSerializer
@@ -8,7 +8,7 @@ from .rag_llamacpp import handle_chat_query_llamacpp, get_user_history as get_us
 from .rag_gemini import handle_chat_query_gemini, gemini_get_user_history, search_user_history_gemini
 
 class OLlamaBotView(APIView):
-    authentication_classes = [UserAuthentication] 
+    permission_classes = [permissions.AllowAny]
     def post(self, request):
         serializer = ChatRequestSerializer(data=request.data)
 
@@ -58,7 +58,7 @@ class OLlamaBotView(APIView):
 
 
 class ChatLlamaCppView(APIView):
-    authentication_classes = [UserAuthentication] 
+    permission_classes = [permissions.AllowAny]
     def post(self, request):
         serializer = ChatRequestSerializer(data=request.data)
         if not serializer.is_valid():
@@ -96,7 +96,7 @@ class ChatLlamaCppView(APIView):
             )
         
 class ChatGeminiView(APIView):
-    authentication_classes = [UserAuthentication] 
+    permission_classes = [permissions.AllowAny]
     def post(self, request):
         serializer = ChatRequestSerializer(data=request.data)
         if not serializer.is_valid():
@@ -121,26 +121,6 @@ class ChatGeminiView(APIView):
                 history = search_user_history_gemini(user_id, search=search, n_results=limit)
             else:
                 history = gemini_get_user_history(user_id=user_id, limit=limit)
-            response_serializer = UserHistoryResponseSerializer({
-                "user_id": user_id,
-                "history": history
-            })
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {"error": f"No se pudo obtener el historial: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-class UserHistoryView(APIView):
-    def get(self, request, user_id):
-        limit = int(request.query_params.get("limit", 10))
-        search = request.query_params.get("search")
-        try:
-            if search:
-                history = search_user_history(user_id, search=search, n_results=limit)
-            else:
-                history = get_user_history(user_id, limit)
             response_serializer = UserHistoryResponseSerializer({
                 "user_id": user_id,
                 "history": history

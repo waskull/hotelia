@@ -60,6 +60,13 @@ TEMPLATES = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+         'llama.authentication.UserAuthentication',
+    ),
+    'DATETIME_FORMAT': "%d/%m/%Y %I:%M %p",
+}
+
 WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {}
