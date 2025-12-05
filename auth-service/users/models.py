@@ -17,6 +17,7 @@ class User(AbstractUser):
         unique=True,
         error_messages={"unique": "Ya hay un usuario con este email"},
     )
+    #updated_at = models.DateTimeField(auto_now=True)
     dni = models.CharField(max_length=10, unique=True)
     phone = models.CharField(validators=[phone_regex], max_length=17, blank=False, unique=True, error_messages={"unique": "Ya hay un usuario con este telefono"},)
     username = None

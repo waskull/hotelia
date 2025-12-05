@@ -17,6 +17,7 @@ from . import serializers
 User = get_user_model()
 NOTIFICATIONS_SERVICE_URL = settings.NOTIFICATIONS_SERVICE_URL
 
+
 class UserViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -39,6 +40,11 @@ class UserViewSet(
             permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset()).order_by('-date_joined')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -53,7 +59,7 @@ class UserViewSet(
                 "destinations": [email]
             }
             response = httpx.post(
-                f'{NOTIFICATIONS_SERVICE_URL}email/',timeout=8, json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_TOKEN})
+                f'{NOTIFICATIONS_SERVICE_URL}email/', timeout=8, json=json, headers={'X-Notification-Gateway-Token': settings.NOTIFICATION_TOKEN})
             response.raise_for_status()
             print(response.json())
         except httpx.RequestError as e:

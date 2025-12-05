@@ -94,7 +94,7 @@ class HotelViewSet(viewsets.ModelViewSet):
                     "count": data['count']
                 })
 
-            # Optional: Sort the list by 'count' descending
+            
             top_hotels_list.sort(key=lambda x: x['count'], reverse=True)
             return Response(top_hotels_list, status=response.status_code)
         except httpx.RequestError as e:
