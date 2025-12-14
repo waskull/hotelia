@@ -123,6 +123,8 @@ def search_user_history_gemini(user_id: str, search: str, n_results: int = 5):
 
 
 def generate_answer_gemini(query: str, context: str, temperature: float = 0.8):
+    model = "gemma-3-27b-it"
+    gemini = "gemini-2.0-flash-lite"
     prompt = (
         f"{SYSTEM_PROMPT}\n\n"
         f"=== CONTEXT ===\n{context}\n\n"
@@ -130,7 +132,7 @@ def generate_answer_gemini(query: str, context: str, temperature: float = 0.8):
         "=== INSTRUCCIÓN ===\n"
         "Responde solo con información del contexto. Sé claro y conciso."
     )
-    url = f"{GEMINI_API_BASE}/models/gemini-2.0-flash-lite:generateContent?key={GOOGLE_API_KEY}"
+    url = f"{GEMINI_API_BASE}/models/{model}:generateContent?key={GOOGLE_API_KEY}"
     try:
         print("contexto: ", prompt)
         response = httpx.post(url, json={
