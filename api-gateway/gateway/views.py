@@ -214,7 +214,7 @@ class HotelView(BaseViewSet):
     parser_classes = [MultiPartParser, FileUploadParser]
     serializer_class = HotelSerializer
 
-    def get_serializer(self):
+    def get_serializer_class(self):
         if self.action == "top":
             return None
         return self.serializer_class
